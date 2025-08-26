@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dog Runner — Emoji Game</title>
+  <style>
+    :root{--bg:#e6f7ff}
+    html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);display:flex;align-items:center;justify-content:center}
+    .game-wrap{width:900px;max-width:95vw;background:white;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.08);padding:18px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    h1{font-size:18px;margin:0}
+    .info{font-size:14px;color:#444}
+    canvas{background:linear-gradient(#cceffd,#e6fbff);display:block;border-radius:8px;width:100%;height:360px}
+    .controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
+    button{padding:8px 12px;border-radius:8px;border:1px solid #d0e9ff;background:#ffffff;cursor:pointer}
+    .overlay{position:relative}
+    .hud{position:absolute;left:12px;top:8px;background:rgba(255,255,255,0.7);padding:6px 8px;border-radius:8px;font-weight:600}
+    .center-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .center-msg .box{pointer-events:auto;background:rgba(255,255,255,0.95);padding:12px 18px;border-radius:10px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+    .small{font-size:13px;color:#555}
+  </style>
+</head>
+<body>
+  <div class="game-wrap">
+    <header>
+      <h1>Dog Runner 🐶 — simple HTML emoji game</h1>
+      <div class="info small">Space / Tap to jump • Avoid bones 🍖</div>
+    </header>
+
+    <div class="overlay" style="position:relative">
+      <canvas id="game"></canvas>
+      <div class="hud" id="score">Score: 0</div>
+      <div class="center-msg" id="centerMsg">
+        <div class="box">
+          <div style="font-size:22px">Ready?</div>
+          <div class="small" style="margin-top:6px">Press <strong>Space</strong> or tap to start</div>
+          <div style="margin-top:10px"><button id="startBtn">Start</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="restartBtn">Restart</button>
+      <button id="muteBtn">Mute</button>
+    </div>
+  </div>
+
+  <script>
+    // Basic runner game using emoji as sprites
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const centerMsg = document.getElementById('centerMsg');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const muteBtn = document.getElementById('muteBtn');
+
+    // resolution handling
+    function resize(){
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    // make canvas height consistent
+    canvas.style.height = '360px';
+    resize();
+    window.addEventListener('resize', () => { resize(); draw(); });
+
+    // Game state
+    let running = false;
+    let gameOver = false;
+    let score = 0;
+    let speed = 3; // ground speed
+
+    // Player
+    const player = {
+      x: 80,
+      y: 0,
+      vy: 0,
+      w: 48,
+      h: 48,
+      onGround: true
+    };
+
+    const gravity = 0.9;
+    const jumpStrength = -14;
+
+    // Obstacles: bones 🍖
+    let obstacles = [];
+    let spawnTimer = 0;
+
+    // emojis
+    const dogEmoji = '🐶';
+    const boneEmoji = '🍖';
+    const cloudEmoji = '☁️';
+    const groundEmoji = '🌿';
+
+    // audio (tiny UX -- optional)
+    let muted = false;
+    function playBeep(){ if(muted) return; try{ const o=new AudioContext(); const s=o.createOscillator(); const g=o.createGain(); s.connect(g); g.connect(o.destination); s.type='sine'; s.frequency.value=800; g.gain.value=0.02; s.start(); setTimeout(()=>{s.stop(); o.close()},70);}catch(e){} }
+
+    // helpers
+    function reset(){
+      score = 0; speed = 3; obstacles = []; spawnTimer = 0; player.y = 240; player.vy = 0; player.onGround = true; running = false; gameOver = false; scoreEl.textContent = 'Score: 0'; centerMsg.style.display = 'flex';
+    }
+
+    function startGame(){ if(running) return; running = true; gameOver = false; centerMsg.style.display = 'none'; lastTime = performance.now(); requestAnimationFrame(loop); }
+
+    function endGame(){ running = false; gameOver = true; centerMsg.style.display = 'flex'; centerMsg.innerHTML = `<div class="box"><div style="font-size:22px">Game Over 🦴</div><div class="small" style="margin-top:8px">Score: ${Math.floor(score)}</div><div style="margin-top:10px"><button id="againBtn">Play Again</button></div></div>`; document.getElementById('againBtn').onclick = ()=>{ reset(); startGame(); } }
+
+    // collisions
+    function rectsOverlap(a,b){
+      return !(a.x + a.w < b.x || a.x > b.x + b.w || a.y + a.h < b.y || a.y > b.y + b.h);
+    }
+
+    // draw helpers
+    function drawTextEmoji(e, x, y, size=32){ ctx.font = `${size}px serif`; ctx.textBaseline='top'; ctx.fillText(e, x, y); }
+
+    // initial player position
+    player.y = 240;
+
+    let lastTime=0;
+    function loop(t){
+      const dt = (t - lastTime) / 16.666; // ~60fps baseline
+      lastTime = t;
+      update(dt);
+      draw();
+      if(running) requestAnimationFrame(loop);
+    }
+
+    function update(dt){
+      if(gameOver) return;
+      // physics
+      player.vy += gravity * dt;
+      player.y += player.vy * dt;
+      if(player.y >= 240){ player.y = 240; player.vy = 0; player.onGround = true; }
+      else player.onGround = false;
+
+      // spawn obstacles
+      spawnTimer -= dt;
+      if(spawnTimer <= 0){
+        spawnTimer = 60 + Math.random()*120; // frames
+        // create bone
+        obstacles.push({x: canvas.getBoundingClientRect().width + 40, y: 260, w:40, h:40});
+      }
+
+      // move obstacles
+      for(let i=obstacles.length-1;i>=0;i--){
+        obstacles[i].x -= speed * dt;
+        if(obstacles[i].x + obstacles[i].w < -50) obstacles.splice(i,1);
+      }
+
+      // difficulty ramp
+      speed += 0.0005 * dt; // tiny ramp
+      score += 0.1 * dt;
+      scoreEl.textContent = 'Score: ' + Math.floor(score);
+
+      // collision detection
+      const pBox = {x:player.x, y:player.y, w:player.w, h:player.h};
+      for(const ob of obstacles){
+        const oBox = {x:ob.x, y:ob.y, w:ob.w, h:ob.h};
+        if(rectsOverlap(pBox, oBox)){
+          playBeep(); endGame(); break;
+        }
+      }
+    }
+
+    function draw(){
+      const w = canvas.getBoundingClientRect().width;
+      const h = canvas.getBoundingClientRect().height;
+
+      // clear
+      ctx.clearRect(0,0,w,h);
+
+      // sky clouds
+      drawTextEmoji(cloudEmoji, 20, 20, 28);
+      drawTextEmoji(cloudEmoji, w - 80, 40, 28);
+
+      // ground
+      ctx.fillStyle='';
+      drawTextEmoji(groundEmoji, 0, 320, 36);
+      for(let x=50;x<w;x+=48) drawTextEmoji(groundEmoji, x, 320, 36);
+
+      // player (dog)
+      drawTextEmoji(dogEmoji, player.x, player.y - player.h/2, player.w);
+
+      // obstacles bones
+      for(const ob of obstacles){ drawTextEmoji(boneEmoji, ob.x, ob.y - ob.h/2, ob.w); }
+
+      // simple shadow under player
+      ctx.beginPath(); ctx.ellipse(player.x + 22, 296, 28, 6, 0, 0, Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.08)'; ctx.fill();
+    }
+
+    // controls
+    function jump(){ if(gameOver) return; if(!running) startGame(); if(player.onGround){ player.vy = jumpStrength; player.onGround = false; playBeep(); } }
+
+    document.addEventListener('keydown', e=>{ if(e.code === 'Space') { e.preventDefault(); jump(); } });
+    document.addEventListener('touchstart', e=>{ e.preventDefault(); jump(); });
+    document.addEventListener('click', e=>{ /* ignore clicks on UI buttons */ if(e.target.tagName==='BUTTON') return; jump(); });
+
+    startBtn.onclick = ()=>{ reset(); startGame(); };
+    restartBtn.onclick = ()=>{ reset(); startGame(); };
+    muteBtn.onclick = ()=>{ muted = !muted; muteBtn.textContent = muted ? 'Unmute' : 'Mute'; };
+
+    // initial draw & reset
+    reset(); draw();
+
+    // accessibility hint
+    // show simple instructions in console so keyboard users can find them
+    console.log('Dog Runner — press Space or tap to jump.');
+  </script>
+</body>
+</html>
