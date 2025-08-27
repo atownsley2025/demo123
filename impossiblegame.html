@@ -4,17 +4,138 @@
   <meta charset="UTF-8">
   <title>Impossible Game - Easy Level 1</title>
   <style>
-    body { margin:0; background:#111; overflow:hidden; }
-    canvas { display:block; margin:0 auto; background:#222; }
+    body { margin:0; background:#111; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; }
+    canvas { display:none; background:#222; }
+    #startBtn {
+      padding: 15px 30px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      background: orange;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+      transition: 0.2s;
+    }
+    #startBtn:hover {
+      background: darkorange;
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
+  <button id="startBtn">Start Game</button>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+    const startBtn = document.getElementById("startBtn");
 
     // Player cube
     const player = {
       x: 50,
       y: 300,
+      width: 30,
+      height: 30,
+      dy: 0,
+      gravity: 0.6,
+      jumpPower: -12,
+      grounded: false
+    };
+
+    // Easier obstacles (shorter height)
+    const obstacles = [
+      {x: 400, y: 350, width: 20, height: 50},
+      {x: 700, y: 350, width: 20, height: 50},
+      {x: 1050, y: 350, width: 20, height: 50},
+      {x: 1400, y: 350, width: 20, height: 50}
+    ];
+
+    let speed = 4; 
+    let gameOver = false;
+    let gameStarted = false;
+    let readyDelay = false; // delay before movement
+
+    function drawPlayer() {
+      ctx.fillStyle = "orange";
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = "red";
+      for (let obs of obstacles) {
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      }
+    }
+
+    function update() {
+      if (!gameStarted || gameOver) return;
+
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // Gravity
+      player.y += player.dy;
+      player.dy += player.gravity;
+
+      // Ground
+      if (player.y + player.height >= 360) {
+        player.y = 360 - player.height;
+        player.dy = 0;
+        player.grounded = true;
+      } else {
+        player.grounded = false;
+      }
+
+      if (readyDelay) {
+        // Move obstacles
+        for (let obs of obstacles) {
+          obs.x -= speed;
+
+          // Collision check
+          if (
+            player.x < obs.x + obs.width &&
+            player.x + player.width > obs.x &&
+            player.y < obs.y + obs.height &&
+            player.y + player.height > obs.y
+          ) {
+            gameOver = true;
+            alert("Game Over! Try Again.");
+            document.location.reload();
+          }
+        }
+      }
+
+      drawPlayer();
+      drawObstacles();
+
+      requestAnimationFrame(update);
+    }
+
+    function jump() {
+      if (player.grounded) {
+        player.dy = player.jumpPower;
+        player.grounded = false;
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space") jump();
+    });
+
+    // Start button
+    startBtn.addEventListener("click", () => {
+      startBtn.style.display = "none";
+      canvas.style.display = "block";
+      gameStarted = true;
+
+      // 2 second delay before obstacles move
+      setTimeout(() => {
+        readyDelay = true;
+      }, 2000);
+
+      update();
+    });
+  </script>
+</body>
+</html>
