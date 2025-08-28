@@ -58,14 +58,10 @@ for(let i=0;i<5;i++){
   clouds.push({x:i*160+Math.random()*100,y:40+Math.random()*60,w:60+Math.random()*40,h:30+Math.random()*15});
 }
 
-// Birds & Butterflies
+// Birds
 let birds=[];
-let butterflies=[];
-for(let i=0;i<4;i++){
-  birds.push({x:Math.random()*canvas.width,y:60+Math.random()*40,speed:1+Math.random()*0.5});
-}
-for(let i=0;i<5;i++){
-  butterflies.push({x:Math.random()*canvas.width,y:150+Math.random()*100,dir:Math.random()<0.5?-1:1,color:`hsl(${Math.random()*360},70%,60%)`});
+for(let i=0;i<6;i++){
+  birds.push({x:Math.random()*canvas.width,y:60+Math.random()*40,speed:1+Math.random()*0.5,phase:Math.random()*Math.PI*2});
 }
 
 // Flower colors
@@ -121,11 +117,10 @@ function update(){
 
   for(const c of clouds){c.x-=0.5; if(c.x+c.w<0) c.x=canvas.width+Math.random()*100;}
 
-  for(const b of birds){ b.x-=b.speed; if(b.x<-20){b.x=canvas.width+40; b.y=60+Math.random()*40;} }
-  for(const bf of butterflies){
-    bf.x+=bf.dir*1.2; 
-    bf.y+=Math.sin(Date.now()/300+bf.x/50)*0.5; 
-    if(bf.x<-20||bf.x>canvas.width+20){bf.dir*=-1;}
+  for(const b of birds){
+    b.x-=b.speed;
+    b.phase+=0.2;
+    if(b.x<-20){b.x=canvas.width+40; b.y=60+Math.random()*40;}
   }
 
   player.vy+=gravity;
@@ -166,21 +161,22 @@ function update(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // sky
+  // pastel sunset background
   let sky=ctx.createLinearGradient(0,0,0,GROUND_Y);
-  sky.addColorStop(0,"#a8d8ff");
-  sky.addColorStop(1,"#e6f7ff");
+  sky.addColorStop(0,"#d6f0ff");   // light blue
+  sky.addColorStop(0.5,"#ffe5b4"); // light orange
+  sky.addColorStop(1,"#ffd6e7");   // light pink
   ctx.fillStyle=sky;
   ctx.fillRect(0,0,canvas.width,GROUND_Y);
 
-  // sun glow
-  let sunX=canvas.width-100, sunY=90;
-  let grad=ctx.createRadialGradient(sunX,sunY,20,sunX,sunY,80);
+  // sun glow lower in the sky
+  let sunX=canvas.width-140, sunY=GROUND_Y*0.5;
+  let grad=ctx.createRadialGradient(sunX,sunY,20,sunX,sunY,100);
   grad.addColorStop(0,"#FFD43B");
   grad.addColorStop(1,"rgba(255,212,59,0)");
   ctx.fillStyle=grad;
   ctx.beginPath();
-  ctx.arc(sunX,sunY,80,0,Math.PI*2);
+  ctx.arc(sunX,sunY,100,0,Math.PI*2);
   ctx.fill();
 
   // clouds
@@ -193,37 +189,16 @@ function draw(){
     ctx.fill();
   }
 
-  // birds
+  // birds with flapping wings
   ctx.strokeStyle="#333"; ctx.lineWidth=2;
   for(const b of birds){
+    let flap=Math.sin(b.phase)*6;
     ctx.beginPath();
     ctx.moveTo(b.x,b.y);
-    ctx.lineTo(b.x+8,b.y+4);
+    ctx.lineTo(b.x+8,b.y+flap);
     ctx.moveTo(b.x,b.y);
-    ctx.lineTo(b.x-8,b.y+4);
+    ctx.lineTo(b.x-8,b.y+flap);
     ctx.stroke();
-  }
-
-  // butterflies
-  for(const bf of butterflies){
-    ctx.fillStyle=bf.color;
-    ctx.beginPath();
-    ctx.moveTo(bf.x,bf.y);
-    ctx.lineTo(bf.x-6,bf.y-4);
-    ctx.lineTo(bf.x-6,bf.y+4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(bf.x,bf.y);
-    ctx.lineTo(bf.x+6,bf.y-4);
-    ctx.lineTo(bf.x+6,bf.y+4);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // trees (more of them)
-  for(let i=100;i<800;i+=150){
-    drawTree(i,GROUND_Y,1+Math.random()*0.3);
   }
 
   // ground gradient
@@ -243,21 +218,6 @@ function draw(){
   ctx.beginPath();
   ctx.arc(player.x+player.r,player.y+player.r,player.r,0,Math.PI*2);
   ctx.fill();
-}
-
-function drawTree(x,groundY,scale){
-  ctx.fillStyle="#4d2e0b";
-  ctx.fillRect(x-8*scale,groundY-100*scale,16*scale,100*scale);
-  const greens=["#006400","#228B22","#2E8B57"];
-  greens.forEach((g,i)=>{
-    ctx.fillStyle=g;
-    ctx.beginPath();
-    ctx.moveTo(x,groundY-(150+i*15)*scale);
-    ctx.lineTo(x-50*scale+i*10,groundY-(50-i*10)*scale);
-    ctx.lineTo(x+50*scale-i*10,groundY-(50-i*10)*scale);
-    ctx.closePath();
-    ctx.fill();
-  });
 }
 
 function drawFlower(x,y,size,color){
@@ -301,5 +261,6 @@ function loop(){
 </script>
 </body>
 </html>
+
 
 
