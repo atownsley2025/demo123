@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Endless Outdoor Runner</title>
+<title>Endless Flower Runner</title>
 <style>
   body {
     margin:0; 
@@ -21,7 +21,7 @@
 </style>
 </head>
 <body>
-<h2 style="color:#111;">Endless Outdoor Runner</h2>
+<h2 style="color:#111;">Endless Flower Runner</h2>
 <div id="hud">Level: <span id="lvl">1</span> · Attempts: <span id="tries">0</span> · Jumps: <span id="jumps">0</span></div>
 <canvas id="game" width="800" height="400"></canvas>
 <div>
@@ -58,8 +58,8 @@ for(let i=0;i<5;i++){
   clouds.push({x:i*160+Math.random()*100,y:40+Math.random()*60,w:60+Math.random()*40,h:30+Math.random()*15});
 }
 
-// Flower colors
-const flowerColors=["#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#FF6EC7"];
+// Flower colors (shades of pink + white)
+const flowerColors=["#FFC0CB","#FFB6C1","#FF69B4","#F8BBD0","#fff"];
 let colorIndex=0;
 
 const COLORS={
@@ -103,8 +103,7 @@ function update(){
 
   spawnTimer-=speed;
   if(spawnTimer<=0){
-    const type=Math.random()<0.5?"bush":"flower";
-    obstacles.push({x:canvas.width+40,type:type,size:30+Math.random()*15,y:GROUND_Y});
+    obstacles.push({x:canvas.width+40,type:"flower",size:30+Math.random()*15,y:GROUND_Y});
     spawnTimer=baseSpawn - (level*5) + Math.random()*120;
     if(spawnTimer<80) spawnTimer=80;
   }
@@ -180,11 +179,7 @@ function draw(){
   ctx.fillRect(0,GROUND_Y,canvas.width,canvas.height-GROUND_Y);
 
   for(const o of obstacles){
-    if(o.type==="bush"){
-      drawBush(o.x,o.y,o.size);
-    } else if(o.type==="flower"){
-      drawFlower(o.x+o.size/2,o.y,o.size);
-    }
+    drawFlower(o.x+o.size/2,o.y,o.size);
   }
 
   ctx.fillStyle=COLORS.player;
@@ -194,10 +189,8 @@ function draw(){
 }
 
 function drawTree(x,groundY,scale){
-  // trunk
   ctx.fillStyle="#4d2e0b";
   ctx.fillRect(x-8*scale,groundY-100*scale,16*scale,100*scale);
-  // foliage layers with different greens
   const greens=["#006400","#228B22","#2E8B57"];
   greens.forEach((g,i)=>{
     ctx.fillStyle=g;
@@ -208,16 +201,6 @@ function drawTree(x,groundY,scale){
     ctx.closePath();
     ctx.fill();
   });
-}
-
-function drawBush(x,y,size){
-  const greens=["#2E8B57","#3CB371","#228B22"];
-  for(let i=-1;i<=1;i++){
-    ctx.fillStyle=greens[Math.floor(Math.random()*greens.length)];
-    ctx.beginPath();
-    ctx.arc(x+size/2+i*12,y-10,size/2.2,0,Math.PI*2);
-    ctx.fill();
-  }
 }
 
 function drawFlower(x,y,size){
@@ -253,3 +236,4 @@ function loop(){
 </script>
 </body>
 </html>
+
