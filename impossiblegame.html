@@ -1,168 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Impossible Game - 5 Levels</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impossible Game – 5 Levels</title>
   <style>
-    body { margin:0; background:#111; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
-    canvas { display:none; background:#222; margin-top:20px; }
-    button {
-      padding: 15px 30px;
-      font-size: 20px;
-      border: none;
-      border-radius: 10px;
-      background: orange;
-      color: white;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-      transition: 0.2s;
-      margin: 10px;
-    }
-    button:hover {
-      background: darkorange;
-      transform: scale(1.05);
-    }
+    :root{ --bg:#0f1226; --fg:#e6e7ff; --accent:#8ef; --danger:#ff4d6d; --ok:#70e000; }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#0f1226,#050612);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+    .wrap{display:grid;place-items:center;height:100%;padding:16px}
+    .frame{width:min(960px,100%);} 
+    #ui{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0}
+    #ui .left{display:flex;gap:10px;align-items:center}
+    #ui .right{display:flex;gap:8px;align-items:center}
+    .pill{padding:6px 10px;border:1px solid #2b2e57;border-radius:999px;opacity:.9}
+    .btn{cursor:pointer;border:none;border-radius:10px;padding:10px 14px;background:#1b1e3f;color:var(--fg);font-weight:700;box-shadow:0 6px 16px #0006;transition:transform .08s ease}
+    .btn:active{transform:translateY(1px)}
+    canvas{width:100%;height:420px;background:linear-gradient(#0b0f27 0%,#0b0f27 70%,#0a0a12 70%,#0a0a12 100%);border:1px solid #262a54;border-radius:16px;box-shadow:0 20px 50px #0008}
+    .overlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+    .card{background:#11142b;border:1px solid #2b2e57;border-radius:16px;padding:22px 20px;box-shadow:0 20px 50px #000a;text-align:center;max-width:520px}
+    .title{font-size:26px;font-weight:800;margin:0 0 6px}
+    .subtitle{opacity:.85;margin:0 0 16px}
+    .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .ghost{opacity:.5;font-size:14px;margin-top:10px}
+    .kbd{padding:2px 6px;border:1px solid #2b2e57;border-radius:6px;background:#0f1230}
+    .hud{position:absolute;left:16px;top:16px;background:#0f1230aa;border:1px solid #2b2e57;border-radius:10px;padding:8px 10px;font-size:14px}
+    .toast{position:absolute;right:16px;top:16px;background:#0f1230aa;border:1px solid #2b2e57;border-radius:10px;padding:8px 10px;font-size:14px;opacity:0;transform:translateY(-8px);transition:opacity .25s ease,transform .25s ease}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .mobile-ctr{display:none;gap:10px;justify-content:center;margin-top:8px}
+    .mkey{flex:1;min-width:110px}
+    @media (max-width:700px){ .mobile-ctr{display:flex} }
   </style>
 </head>
 <body>
-  <h1 style="color:white; font-family:sans-serif;">Impossible Game</h1>
-  <button id="startBtn">Start Game</button>
-  <button id="retryBtn" style="display:none;">Retry</button>
-  <button id="nextBtn" style="display:none;">Next Level</button>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <div class="wrap">
+    <div class="frame">
+      <div id="ui">
+        <div class="left">
+          <span class="pill">The Impossible (but actually beatable) Game</span>
+          <button id="btnStart" class="btn">▶ Start</button>
+          <button id="btnReset" class="btn" title="Reset current level">↻ Reset</button>
+        </div>
+        <div class="right">
+          <label class="pill" title="Lower is easier">Gravity
+            <input id="grav" type="range" min="0.4" max="1.0" step="0.05" value="0.65">
+          </label>
+          <label class="pill" title="Higher is easier">Jump
+            <input id="jump" type="range" min="9" max="15" step="0.5" value="12">
+          </label>
+          <label class="pill" title="Higher is easier">Speed
+            <input id="speed" type="range" min="3" max="6" step="0.25" value="4.0">
+          </label>
+        </div>
+      </div>
+
+      <div style="position:relative">
+        <canvas id="game" width="960" height="420" tabindex="0"></canvas>
+        <div id="overlay" class="overlay"></div>
+        <div id="hud" class="hud">Level: <span id="lvl">1</span> / 5 · Attempts: <span id="tries">0</span></div>
+        <div id="toast" class="toast">Level Complete!</div>
+      </div>
+      <div class="mobile-ctr">
+        <button id="tapJump" class="btn mkey">Tap to Jump</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const startBtn = document.getElementById("startBtn");
-    const retryBtn = document.getElementById("retryBtn");
-    const nextBtn = document.getElementById("nextBtn");
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const overlay = document.getElementById('overlay');
+  const toast = document.getElementById('toast');
+  const lvlEl = document.getElementById('lvl');
+  const triesEl = document.getElementById('tries');
+  const btnStart = document.getElementById('btnStart');
+  const btnReset = document.getElementById('btnReset');
+  const tapJump = document.getElementById('tapJump');
+  const gravSlider = document.getElementById('grav');
+  const jumpSlider = document.getElementById('jump');
+  const speedSlider = document.getElementById('speed');
 
-    let level = 1;
-    let player, obstacles, speed, gameOver, gameStarted, obstacleMove, win;
+  const GROUND_Y = 340;
+  const COLORS = { player:'#8ef', obstacle:'#ff4d6d', end:'#70e000', ground:'#1c2045' };
 
-    function setupLevel(lvl) {
-      player = { x: 50, y: 300, width: 30, height: 30, dy: 0, gravity: 0.6, jumpPower: -12, grounded: false };
+  let STATE = 'idle';
+  let countdownLeft = 0;
+  let attemptCount = 0;
 
-      // Each level gets harder
-      speed = 3 + lvl; 
-      const height = Math.max(20, 60 - lvl*5); // taller on easy, shorter jumps later
-      const spacing = 350 - lvl*50; // obstacles closer later
-      obstacles = [];
-      for (let i = 0; i < 4 + lvl; i++) {
-        obstacles.push({ x: 400 + i*spacing, y: 360 - height, width: 20, height: height });
-      }
+  const camera = {x:0};
+  const player = {x:40,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true};
+  let levelIndex = 0;
+  const input = {justPressed:false};
 
-      gameOver = false;
-      gameStarted = false;
-      obstacleMove = false;
-      win = false;
-    }
+  function r(x,y,w,h){return {x,y,w,h}}
+  const LEVELS = [
+    // Adjusted Level 1: added more spacing at the end so the last jumps are possible
+    { length: 2000, endX: 1920, obstacles: [
+        r(280,280,30,60), r(480,300,26,40), r(650,300,26,40), r(820,300,26,40), 
+        r(1000,270,26,70), r(1180,300,20,40), r(1280,300,28,40), 
+        // widened gap here before final obstacles
+        r(1500,280,30,60), r(1660,300,22,40)
+    ]},
+    { length: 2100, endX: 2020, obstacles: [ r(320,300,28,40), r(380,300,28,40), r(520,280,30,60), r(760,300,28,40), r(820,300,28,40), r(1030,260,30,80), r(1160,300,20,40), r(1300,300,24,40), r(1440,300,28,40), r(1560,280,30,60), r(1660,300,20,40), r(1760,300,24,40) ]},
+    { length: 2400, endX: 2320, obstacles: [ r(300,300,26,40), r(420,300,26,40), r(540,300,26,40), r(660,280,30,60), r(820,300,26,40), r(940,300,26,40), r(1060,300,26,40), r(1180,280,28,60), r(1320,300,26,40), r(1480,260,30,80), r(1640,300,20,40), r(1780,300,24,40), r(1900,300,26,40), r(2060,280,30,60) ]},
+    { length: 2600, endX: 2520, obstacles: [ r(360,300,26,40), r(520,300,26,40), r(600,280,30,60), r(740,300,26,40), r(860,300,26,40), r(980,260,30,80), r(1140,300,22,40), r(1280,300,24,40), r(1420,300,26,40), r(1540,280,30,60), r(1680,300,20,40), r(1820,300,22,40), r(1960,300,24,40), r(2100,280,30,60), r(2240,300,24,40) ]},
+    { length: 3000, endX: 2920, obstacles: [ r(360,300,24,40), r(420,300,24,40), r(540,280,28,60), r(680,300,24,40), r(760,300,24,40), r(920,260,30,80), r(1060,300,22,40), r(1120,300,22,40), r(1280,280,28,60), r(1420,300,24,40), r(1560,300,24,40), r(1700,280,28,60), r(1840,300,22,40), r(1980,300,22,40), r(2120,300,24,40), r(2260,280,28,60), r(2420,300,24,40), r(2580,300,24,40), r(2740,280,28,60) ]}
+  ];
 
-    function drawPlayer() {
-      ctx.fillStyle = "orange";
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-    }
+  function pressJump(){ input.justPressed = true; }
+  window.addEventListener('keydown', e=>{
+    if(['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); pressJump(); }
+  });
+  window.addEventListener('pointerdown', pressJump);
+  tapJump.addEventListener('click', e=>{ e.stopPropagation(); pressJump(); });
 
-    function drawObstacles() {
-      ctx.fillStyle = "red";
-      for (let obs of obstacles) {
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-      }
-    }
+  function params(){ return { gravity: parseFloat(gravSlider.value), jump: parseFloat(jumpSlider.value), speed: parseFloat(speedSlider.value) }; }
+  function resetPlayer(){ Object.assign(player,{x:40,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true}); camera.x=0; }
 
-    function update() {
-      if (!gameStarted || gameOver) return;
+  function showOverlayStart(){ overlay.innerHTML = ` <div class="card" style="pointer-events:auto"> <h2 class="title">Ready?</h2> <p class="subtitle">Jump the red blocks. Touch the green flag to finish each level.</p> <div class="row"> <button class="btn" id="oStart">▶ Start Game</button> </div> <div class="ghost">Controls: <span class="kbd">Space</span> / <span class="kbd">Click</span> · Reset: <span class="kbd">R</span></div> </div>`; document.getElementById('oStart').onclick = startWithCountdown; }
+  function startWithCountdown(){ overlay.innerHTML=''; countdownLeft=3; STATE='countdown'; }
+  function showToast(msg){ toast.textContent=msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1200); }
 
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+  function nextLevel(){ levelIndex++; if(levelIndex>=LEVELS.length){ STATE='gameover'; overlay.innerHTML = ` <div class="card" style="pointer-events:auto"> <h2 class="title">🎉 You beat all 5 levels!</h2> <p class="subtitle">Attempts: ${attemptCount}</p> <div class="row"><button class="btn" id="again">Play Again</button></div> </div>`; document.getElementById('again').onclick = ()=>{ levelIndex=0; attemptCount=0; triesEl.textContent=attemptCount; lvlEl.textContent=levelIndex+1; resetPlayer(); showOverlayStart(); STATE='idle'; }; return; } lvlEl.textContent = levelIndex+1; resetPlayer(); showToast('Level '+levelIndex+' complete!'); countdownLeft=2; STATE='countdown'; }
 
-      // Gravity
-      player.y += player.dy;
-      player.dy += player.gravity;
+  btnStart.addEventListener('click', ()=>{ if(STATE==='idle') startWithCountdown(); });
+  btnReset.addEventListener('click', ()=>{ resetPlayer(); countdownLeft=2; STATE='countdown'; });
+  window.addEventListener('keydown', e=>{ if(e.key.toLowerCase()==='r'){ resetPlayer(); countdownLeft=2; STATE='countdown'; }});
 
-      // Ground
-      if (player.y + player.height >= 360) {
-        player.y = 360 - player.height;
-        player.dy = 0;
-        player.grounded = true;
-      } else {
-        player.grounded = false;
-      }
+  function rectIntersect(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y }
 
-      if (obstacleMove) {
-        for (let obs of obstacles) {
-          obs.x -= speed;
+  function update(dt){
+    const P = params();
+    if(STATE==='countdown'){ countdownLeft -= dt; if(countdownLeft<=0){ STATE='running'; } return; }
+    if(STATE!=='running') return;
 
-          // Collision check
-          if (
-            player.x < obs.x + obs.width &&
-            player.x + player.width > obs.x &&
-            player.y < obs.y + obs.height &&
-            player.y + player.height > obs.y
-          ) {
-            gameOver = true;
-            retryBtn.style.display = "inline-block";
-            return;
-          }
-        }
+    player.x += P.speed;
+    player.vy += P.gravity;
+    if(player.onGround && input.justPressed){ player.vy = -P.jump; player.onGround=false; }
+    player.y += player.vy;
+    if(player.y + player.h >= GROUND_Y){ player.y = GROUND_Y - player.h; player.vy = 0; player.onGround = true; }
 
-        // Win condition
-        if (obstacles[obstacles.length - 1].x + obstacles[0].width < 0 && !win) {
-          win = true;
-          if (level < 5) {
-            nextBtn.style.display = "inline-block";
-          } else {
-            alert("🎉 You beat all 5 levels! 🎉");
-            retryBtn.style.display = "inline-block";
-          }
-          return;
-        }
-      }
+    const L = LEVELS[levelIndex];
+    for(const o of L.obstacles){ if(rectIntersect(player,o)){ attemptCount++; triesEl.textContent=attemptCount; resetPlayer(); countdownLeft=2; STATE='countdown'; return; } }
+    const endRect = {x:L.endX, y:GROUND_Y-60, w:24, h:60};
+    if(rectIntersect(player,endRect)){ STATE='levelclear'; setTimeout(nextLevel,300); }
 
-      drawPlayer();
-      drawObstacles();
+    camera.x = Math.max(0, Math.min(player.x - canvas.width*0.3, L.length - canvas.width));
+    input.justPressed = false;
+  }
 
-      requestAnimationFrame(update);
-    }
+  function roundRect(ctx, x, y, w, h, r){ if(w<2*r) r=w/2; if(h<2*r) r=h/2; ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.fill(); }
 
-    function jump() {
-      if (player.grounded) {
-        player.dy = player.jumpPower;
-        player.grounded = false;
-      }
-    }
-
-    document.addEventListener("keydown", e => {
-      if (e.code === "Space") jump();
-    });
-
-    startBtn.addEventListener("click", () => {
-      startBtn.style.display = "none";
-      canvas.style.display = "block";
-      setupLevel(level);
-      gameStarted = true;
-      setTimeout(() => obstacleMove = true, 2000);
-      update();
-    });
-
-    retryBtn.addEventListener("click", () => {
-      retryBtn.style.display = "none";
-      nextBtn.style.display = "none";
-      setupLevel(level);
-      gameStarted = true;
-      setTimeout(() => obstacleMove = true, 2000);
-      update();
-    });
-
-    nextBtn.addEventListener("click", () => {
-      level++;
-      retryBtn.style.display = "none";
-      nextBtn.style.display = "none";
-      setupLevel(level);
-      gameStarted = true;
-      setTimeout(() => obstacleMove = true, 2000);
-      update();
-    });
-  </script>
-</body>
-</html>
+  function draw(){
+    const L = LEVELS[levelIndex];
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = COLORS.ground; ctx.fillRect(0, GROUND_Y-2, canvas.width, canvas.height-(GROUND_Y-2));
+    ctx.fillStyle = '#2b2e57'; ctx.fillRect(0, GROUND_Y, canvas.width, 2);
+    const ex = Math.floor(L.endX - camera.x);
+    if(ex>-40 && ex<canvas.width+40){ ctx.fillStyle = COLORS.end; ctx.fillRect(ex, GROUND_Y-60, 4, 60); ctx.beginPath(); ctx.moveTo(ex+4, GROUND_Y-60); ctx.lineTo(ex+24, GROUND_Y-50); ctx.lineTo(ex+4, GROUND_Y-40); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = COLORS.obstacle; for(const o of L.obstacles){ const sx = Math.floor(o.x - camera.x); if(sx+o.w<-10||sx>canvas.width+10) continue; roundRect(ctx, sx, o.y, o.w, o.h, 4); }
+    ctx.fillStyle = COLORS.player; roundRect(ctx, Math.floor(player.x - camera.x), Math.floor(player.y), player.w, player.h, 6);
+    if(STATE==='countdown'){ const t = Math.max(0, Math.ceil(countdownLeft)); ctx.save(); ctx.globalAlpha=.9; ctx.translate(canvas.width/2, canvas.height/3); ctx.fillStyle='#fff'; ctx.font='bold 80px system-ui,Segoe UI,Inter,Arial'; ctx.textAlign='center'; ctx.fillText(t>0? t: 'GO!', 0,0); ctx.restore(); }
+    ctx.fillStyle='#2b2e57'; ctx.fillRect(20,20,canvas.width-40,6); const progress = Math.min(1, Math.max(0, player.x
