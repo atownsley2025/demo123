@@ -2,19 +2,32 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Endless Impossible Game</title>
+<title>Endless Circle Runner</title>
 <style>
-  body{margin:0;background:#0a0f2c;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center}
-  canvas{background:#0d153d;border:2px solid #1e2f78;border-radius:12px;box-shadow:0 10px 30px #0008}
-  #hud{margin:10px;font-size:18px}
-  button{margin:6px;padding:10px 14px;border-radius:8px;border:none;background:#1e2f78;color:#fff;font-weight:600;cursor:pointer}
+  body {
+    margin:0; background:#0a0f2c; color:#fff; 
+    font-family:sans-serif; display:flex; flex-direction:column; align-items:center
+  }
+  canvas {
+    background:#0d153d; border:2px solid #1e2f78; border-radius:12px; 
+    box-shadow:0 10px 30px #0008; margin-top:8px;
+  }
+  #hud {margin:10px;font-size:18px}
+  button {
+    margin:6px; padding:10px 14px; border-radius:8px; border:none;
+    background:#1e2f78; color:#fff; font-weight:600; cursor:pointer
+  }
 </style>
 </head>
 <body>
-<h2>Endless Jump Game</h2>
+<h2>Endless Circle Runner</h2>
 <div id="hud">Level: <span id="lvl">1</span> · Attempts: <span id="tries">0</span> · Jumps: <span id="jumps">0</span></div>
 <canvas id="game" width="800" height="400"></canvas>
-<button id="btnStart">▶ Start</button>
+<div>
+  <button id="btnStart">▶ Start</button>
+  <button id="btnStop">⏸ Stop</button>
+</div>
+
 <script>
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
@@ -22,21 +35,20 @@ const hudLvl=document.getElementById("lvl");
 const hudTries=document.getElementById("tries");
 const hudJumps=document.getElementById("jumps");
 const btnStart=document.getElementById("btnStart");
+const btnStop=document.getElementById("btnStop");
 
 const GROUND_Y=340;
 let STATE="idle";
-let attemptCount=0;
-let jumpCount=0;
-let level=1;
+let attemptCount=0, jumpCount=0, level=1;
 
-const player={x:80,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true,jumpsLeft:2,maxJumps:2};
+const player={x:80,y:GROUND_Y-28,r:16,vy:0,onGround:true,jumpsLeft:2,maxJumps:2};
 const input={justPressed:false};
 const gravity=0.6;
 let speed=4.0;
 let obstacles=[]; 
 let spawnTimer=0;
+let animationId;
 
-// new color scheme
 const COLORS={
   player:"#FFD43B",   // yellow
   obstacle:"#3BA9FF", // light blue
@@ -49,23 +61,30 @@ window.addEventListener("keydown",e=>{
 });
 canvas.addEventListener("pointerdown",pressJump);
 
-btnStart.onclick=()=>{resetGame();STATE="running";};
+btnStart.onclick=()=>{ if(STATE!=="running"){resetGame();STATE="running"; loop();} };
+btnStop.onclick=()=>{ STATE="paused"; cancelAnimationFrame(animationId); };
 
 function resetGame(){
-  attemptCount=0;jumpCount=0;level=1;
+  attemptCount=0; jumpCount=0; level=1;
   hudTries.textContent=attemptCount;
   hudJumps.textContent=jumpCount;
   hudLvl.textContent=level;
-  obstacles=[];
-  resetPlayer();
-  speed=4.0;
+  obstacles=[]; spawnTimer=0;
+  resetPlayer(); speed=4.0;
 }
 
 function resetPlayer(){
-  Object.assign(player,{x:80,y:GROUND_Y-28,vy:0,onGround:true,jumpsLeft:2});
+  Object.assign(player,{x:80,y:GROUND_Y-player.r*2,vy:0,onGround:true,jumpsLeft:2});
 }
 
-function rectIntersect(a,b){return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;}
+function rectIntersectCircle(circle,rect){
+  // clamp circle center to rectangle
+  const cx=circle.x+circle.r, cy=circle.y+circle.r;
+  const rx=Math.max(rect.x,Math.min(cx,rect.x+rect.w));
+  const ry=Math.max(rect.y,Math.min(cy,rect.y+rect.h));
+  const dx=cx-rx, dy=cy-ry;
+  return dx*dx+dy*dy < circle.r*circle.r;
+}
 
 function update(){
   if(STATE!=="running")return;
@@ -73,12 +92,12 @@ function update(){
   // spawn obstacles
   spawnTimer-=speed;
   if(spawnTimer<=0){
-    const h=40+Math.random()*60;
-    obstacles.push({x:canvas.width+40,y:GROUND_Y-h,w:20+Math.random()*20,h:h});
+    const size=30+Math.random()*20;
+    obstacles.push({x:canvas.width+40,y:GROUND_Y-size,w:size,h:size,angle:0});
     spawnTimer=200+Math.random()*200;
   }
-  // move obstacles
-  for(const o of obstacles){o.x-=speed;}
+  // move + rotate obstacles
+  for(const o of obstacles){o.x-=speed; o.angle+=0.05;}
   obstacles=obstacles.filter(o=>o.x+o.w>0);
 
   // physics
@@ -87,37 +106,28 @@ function update(){
     player.vy=-12;
     player.onGround=false;
     player.jumpsLeft--;
-    jumpCount++;
-    hudJumps.textContent=jumpCount;
+    jumpCount++; hudJumps.textContent=jumpCount;
     if(jumpCount%10===0 && jumpCount>0){
-      level++;
-      hudLvl.textContent=level;
-      speed+=0.3;
+      level++; hudLvl.textContent=level; speed+=0.3;
     }
   }
   input.justPressed=false;
 
   player.y+=player.vy;
-  if(player.y+player.h>=GROUND_Y){
-    player.y=GROUND_Y-player.h;
+  if(player.y+player.r*2>=GROUND_Y){
+    player.y=GROUND_Y-player.r*2;
     player.vy=0;
     if(!player.onGround){
-      player.onGround=true;
-      player.jumpsLeft=player.maxJumps;
+      player.onGround=true; player.jumpsLeft=player.maxJumps;
     }
-  }else{player.onGround=false;}
+  } else {player.onGround=false;}
 
   // collisions
   for(const o of obstacles){
-    if(rectIntersect(player,o)){
-      attemptCount++;
-      hudTries.textContent=attemptCount;
-      // reset both player + jump count
-      jumpCount=0;
-      hudJumps.textContent=jumpCount;
-      resetPlayer();
-      obstacles=[];
-      spawnTimer=0;
+    if(rectIntersectCircle(player,o)){
+      attemptCount++; hudTries.textContent=attemptCount;
+      jumpCount=0; hudJumps.textContent=jumpCount;
+      resetPlayer(); obstacles=[]; spawnTimer=0;
       speed=4.0+0.3*(level-1);
       break;
     }
@@ -126,21 +136,32 @@ function update(){
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
+  // ground
   ctx.fillStyle=COLORS.ground;
   ctx.fillRect(0,GROUND_Y,canvas.width,canvas.height-GROUND_Y);
 
+  // obstacles as rotating diamonds
   ctx.fillStyle=COLORS.obstacle;
-  for(const o of obstacles){ctx.fillRect(o.x,o.y,o.w,o.h);}
+  for(const o of obstacles){
+    ctx.save();
+    ctx.translate(o.x+o.w/2,o.y+o.h/2);
+    ctx.rotate(o.angle);
+    ctx.beginPath();
+    ctx.rect(-o.w/2,-o.h/2,o.w,o.h);
+    ctx.fill();
+    ctx.restore();
+  }
+  // player circle
   ctx.fillStyle=COLORS.player;
-  ctx.fillRect(player.x,player.y,player.w,player.h);
+  ctx.beginPath();
+  ctx.arc(player.x+player.r,player.y+player.r,player.r,0,Math.PI*2);
+  ctx.fill();
 }
 
 function loop(){
-  update();
-  draw();
-  requestAnimationFrame(loop);
+  update(); draw();
+  animationId=requestAnimationFrame(loop);
 }
-loop();
 </script>
 </body>
 </html>
