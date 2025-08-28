@@ -45,9 +45,9 @@ let attemptCount=0, jumpCount=0, level=1;
 const player={x:80,y:GROUND_Y-28,r:16,vy:0,onGround:true,jumpsLeft:2,maxJumps:2};
 const input={justPressed:false};
 const gravity=0.6;
-let baseSpeed=3.5;  // easier start
+let baseSpeed=3.5;  
 let speed=baseSpeed;
-let baseSpawn=220;  // base spawn delay
+let baseSpawn=220;  
 let obstacles=[]; 
 let spawnTimer=0;
 let animationId;
@@ -58,13 +58,13 @@ for(let i=0;i<5;i++){
   clouds.push({x:i*160+Math.random()*100,y:40+Math.random()*60,w:60+Math.random()*40,h:30+Math.random()*15});
 }
 
-// Obstacle flower colors
+// Flower colors
 const flowerColors=["#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#FF6EC7"];
 let colorIndex=0;
 
 const COLORS={
   player:"#FFD43B",
-  ground:"#2E8B57" // green grass
+  ground:"#2E8B57" 
 };
 
 function pressJump(){input.justPressed=true;}
@@ -101,22 +101,18 @@ function circleRectCollide(circle,rect){
 function update(){
   if(STATE!=="running")return;
 
-  // spawn obstacles
   spawnTimer-=speed;
   if(spawnTimer<=0){
     const type=Math.random()<0.5?"bush":"flower";
     obstacles.push({x:canvas.width+40,type:type,size:30+Math.random()*15,y:GROUND_Y});
-    spawnTimer=baseSpawn - (level*5) + Math.random()*120; // harder: less delay
-    if(spawnTimer<80) spawnTimer=80; // cap so not impossible
+    spawnTimer=baseSpawn - (level*5) + Math.random()*120;
+    if(spawnTimer<80) spawnTimer=80;
   }
-  // move
   for(const o of obstacles){o.x-=speed;}
   obstacles=obstacles.filter(o=>o.x+o.size>0);
 
-  // move clouds
   for(const c of clouds){c.x-=0.5; if(c.x+c.w<0) c.x=canvas.width+Math.random()*100;}
 
-  // physics
   player.vy+=gravity;
   if(input.justPressed && player.jumpsLeft>0){
     player.vy=-12;
@@ -125,7 +121,7 @@ function update(){
     jumpCount++; hudJumps.textContent=jumpCount;
     if(jumpCount%10===0 && jumpCount>0){
       level++; hudLvl.textContent=level;
-      speed=baseSpeed+level*0.3; // faster with levels
+      speed=baseSpeed+level*0.3;
       colorIndex=(colorIndex+1)%flowerColors.length;
     }
   }
@@ -140,12 +136,10 @@ function update(){
     }
   } else {player.onGround=false;}
 
-  // collisions
   for(const o of obstacles){
     let rect={x:o.x,y:o.y-o.size,w:o.size,h:o.size};
     if(circleRectCollide(player,rect)){
       attemptCount++; hudTries.textContent=attemptCount;
-      // reset progress
       jumpCount=0; level=1;
       hudJumps.textContent=jumpCount; hudLvl.textContent=level;
       resetPlayer(); obstacles=[]; spawnTimer=0;
@@ -158,20 +152,17 @@ function update(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // gradient sky
   let sky=ctx.createLinearGradient(0,0,0,GROUND_Y);
   sky.addColorStop(0,"#87CEFA");
   sky.addColorStop(1,"#cceeff");
   ctx.fillStyle=sky;
   ctx.fillRect(0,0,canvas.width,GROUND_Y);
 
-  // sun
   ctx.fillStyle="#FFD43B";
   ctx.beginPath();
   ctx.arc(canvas.width-80,80,40,0,Math.PI*2);
   ctx.fill();
 
-  // clouds
   ctx.fillStyle="rgba(255,255,255,0.85)";
   for(const c of clouds){
     ctx.beginPath();
@@ -181,57 +172,77 @@ function draw(){
     ctx.fill();
   }
 
-  // static trees
-  drawTree(200,GROUND_Y-100,1);
-  drawTree(400,GROUND_Y-110,1.2);
-  drawTree(600,GROUND_Y-90,0.9);
+  drawTree(200,GROUND_Y,1);
+  drawTree(400,GROUND_Y,1.2);
+  drawTree(600,GROUND_Y,0.9);
 
-  // ground
   ctx.fillStyle=COLORS.ground;
   ctx.fillRect(0,GROUND_Y,canvas.width,canvas.height-GROUND_Y);
 
-  // obstacles
   for(const o of obstacles){
     if(o.type==="bush"){
-      ctx.fillStyle="#228B22";
-      ctx.beginPath();
-      ctx.arc(o.x+o.size/2,o.y-10,o.size/2,0,Math.PI*2);
-      ctx.fill();
+      drawBush(o.x,o.y,o.size);
     } else if(o.type==="flower"){
-      ctx.strokeStyle="#2E8B57"; ctx.lineWidth=3;
-      ctx.beginPath();
-      ctx.moveTo(o.x+o.size/2,o.y);
-      ctx.lineTo(o.x+o.size/2,o.y-o.size);
-      ctx.stroke();
-      ctx.fillStyle=flowerColors[colorIndex];
-      ctx.beginPath();
-      ctx.arc(o.x+o.size/2,o.y-o.size,8,0,Math.PI*2);
-      ctx.fill();
+      drawFlower(o.x+o.size/2,o.y,o.size);
     }
   }
 
-  // player
   ctx.fillStyle=COLORS.player;
   ctx.beginPath();
   ctx.arc(player.x+player.r,player.y+player.r,player.r,0,Math.PI*2);
   ctx.fill();
 }
 
-function drawTree(x,y,scale){
+function drawTree(x,groundY,scale){
+  // trunk
   ctx.fillStyle="#4d2e0b";
-  ctx.fillRect(x-5*scale,y,10*scale,50*scale);
-  ctx.fillStyle="#006400";
+  ctx.fillRect(x-8*scale,groundY-100*scale,16*scale,100*scale);
+  // foliage layers with different greens
+  const greens=["#006400","#228B22","#2E8B57"];
+  greens.forEach((g,i)=>{
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(x,groundY-(150+i*15)*scale);
+    ctx.lineTo(x-50*scale+i*10,groundY-(50-i*10)*scale);
+    ctx.lineTo(x+50*scale-i*10,groundY-(50-i*10)*scale);
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+
+function drawBush(x,y,size){
+  const greens=["#2E8B57","#3CB371","#228B22"];
+  for(let i=-1;i<=1;i++){
+    ctx.fillStyle=greens[Math.floor(Math.random()*greens.length)];
+    ctx.beginPath();
+    ctx.arc(x+size/2+i*12,y-10,size/2.2,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawFlower(x,y,size){
+  // stem
+  ctx.strokeStyle="#2E8B57"; ctx.lineWidth=3;
   ctx.beginPath();
-  ctx.moveTo(x,y-50*scale);
-  ctx.lineTo(x-40*scale,y+10*scale);
-  ctx.lineTo(x+40*scale,y+10*scale);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x,y-size);
+  ctx.stroke();
+  // petals
+  const petalCount=6;
+  const radius=12;
+  ctx.fillStyle=flowerColors[colorIndex];
+  for(let i=0;i<petalCount;i++){
+    const angle=(Math.PI*2/petalCount)*i;
+    const px=x+Math.cos(angle)*radius;
+    const py=y-size+Math.sin(angle)*radius;
+    ctx.beginPath();
+    ctx.arc(px,py,6,0,Math.PI*2);
+    ctx.fill();
+  }
+  // pistil
+  ctx.fillStyle="#FFD93D";
   ctx.beginPath();
-  ctx.moveTo(x,y-80*scale);
-  ctx.lineTo(x-30*scale,y-20*scale);
-  ctx.lineTo(x+30*scale,y-20*scale);
-  ctx.closePath();
+  ctx.arc(x,y-size,7,0,Math.PI*2);
   ctx.fill();
 }
 
@@ -242,4 +253,3 @@ function loop(){
 </script>
 </body>
 </html>
-
