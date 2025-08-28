@@ -5,12 +5,13 @@
 <title>Endless Outdoor Runner</title>
 <style>
   body {
-    margin:0; background:#87ceeb;
-    color:#fff; font-family:sans-serif; display:flex; flex-direction:column; align-items:center
+    margin:0; 
+    background:#87ceeb;
+    color:#fff; font-family:sans-serif; display:flex; flex-direction:column; align-items:center;
   }
   canvas {
-    background:#87ceeb; border:2px solid #1e2f78; border-radius:12px;
-    box-shadow:0 10px 30px #0008; margin-top:8px;
+    border:2px solid #1e2f78; border-radius:12px;
+    box-shadow:0 10px 30px #0006; margin-top:8px;
   }
   #hud {margin:10px;font-size:18px;color:#111;font-weight:bold}
   button {
@@ -44,31 +45,26 @@ let attemptCount=0, jumpCount=0, level=1;
 const player={x:80,y:GROUND_Y-28,r:16,vy:0,onGround:true,jumpsLeft:2,maxJumps:2};
 const input={justPressed:false};
 const gravity=0.6;
-let speed=4.0;
+let baseSpeed=3.5;  // easier start
+let speed=baseSpeed;
+let baseSpawn=220;  // base spawn delay
 let obstacles=[]; 
 let spawnTimer=0;
 let animationId;
 
-// Background elements
-let treesFar=[], treesNear=[];
+// Clouds
 let clouds=[];
-let sun={x:100,y:80,r:30};
-
-function initBackground(){
-  treesFar=[]; treesNear=[]; clouds=[];
-  for(let i=0;i<8;i++){ treesFar.push({x:i*120+Math.random()*60,y:GROUND_Y-80}); }
-  for(let i=0;i<6;i++){ treesNear.push({x:i*200+Math.random()*80,y:GROUND_Y-100}); }
-  for(let i=0;i<5;i++){ clouds.push({x:i*180+Math.random()*100,y:40+Math.random()*50,w:60+Math.random()*40,h:30+Math.random()*10}); }
+for(let i=0;i<5;i++){
+  clouds.push({x:i*160+Math.random()*100,y:40+Math.random()*60,w:60+Math.random()*40,h:30+Math.random()*15});
 }
 
-// Color palette cycle for obstacles
-const obstacleColors=["#3BA9FF","#3BFFD9","#6BFF3B","#FFD43B","#FF6B3B"];
-let obstacleColorIndex=0;
-let obstacleColor=obstacleColors[0];
+// Obstacle flower colors
+const flowerColors=["#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#FF6EC7"];
+let colorIndex=0;
 
 const COLORS={
   player:"#FFD43B",
-  ground:"#228B22" // grass
+  ground:"#2E8B57" // green grass
 };
 
 function pressJump(){input.justPressed=true;}
@@ -86,17 +82,15 @@ function resetGame(){
   hudJumps.textContent=jumpCount;
   hudLvl.textContent=level;
   obstacles=[]; spawnTimer=0;
-  resetPlayer(); speed=4.0;
-  obstacleColorIndex=0; obstacleColor=obstacleColors[0];
-  initBackground();
-  sun={x:100,y:80,r:30};
+  resetPlayer(); speed=baseSpeed;
+  colorIndex=0;
 }
 
 function resetPlayer(){
   Object.assign(player,{x:80,y:GROUND_Y-player.r*2,vy:0,onGround:true,jumpsLeft:2});
 }
 
-function rectIntersectCircle(circle,rect){
+function circleRectCollide(circle,rect){
   const cx=circle.x+circle.r, cy=circle.y+circle.r;
   const rx=Math.max(rect.x,Math.min(cx,rect.x+rect.w));
   const ry=Math.max(rect.y,Math.min(cy,rect.y+rect.h));
@@ -110,23 +104,17 @@ function update(){
   // spawn obstacles
   spawnTimer-=speed;
   if(spawnTimer<=0){
-    const size=30+Math.random()*20;
-    obstacles.push({x:canvas.width+40,y:GROUND_Y-size,w:size,h:size,angle:0});
-    spawnTimer=200+Math.random()*200;
+    const type=Math.random()<0.5?"bush":"flower";
+    obstacles.push({x:canvas.width+40,type:type,size:30+Math.random()*15,y:GROUND_Y});
+    spawnTimer=baseSpawn - (level*5) + Math.random()*120; // harder: less delay
+    if(spawnTimer<80) spawnTimer=80; // cap so not impossible
   }
-  // move + rotate obstacles
-  for(const o of obstacles){o.x-=speed; o.angle+=0.05;}
-  obstacles=obstacles.filter(o=>o.x+o.w>0);
-
-  // move background trees
-  for(const t of treesFar){t.x-=speed*0.3; if(t.x<-40) t.x=canvas.width+Math.random()*60;}
-  for(const t of treesNear){t.x-=speed*0.6; if(t.x<-40) t.x=canvas.width+Math.random()*80;}
+  // move
+  for(const o of obstacles){o.x-=speed;}
+  obstacles=obstacles.filter(o=>o.x+o.size>0);
 
   // move clouds
-  for(const c of clouds){c.x-=1; if(c.x+c.w<0) c.x=canvas.width+Math.random()*100;}
-  
-  // drift sun
-  sun.x+=0.02; sun.y+=Math.sin(Date.now()/5000)*0.02;
+  for(const c of clouds){c.x-=0.5; if(c.x+c.w<0) c.x=canvas.width+Math.random()*100;}
 
   // physics
   player.vy+=gravity;
@@ -136,9 +124,9 @@ function update(){
     player.jumpsLeft--;
     jumpCount++; hudJumps.textContent=jumpCount;
     if(jumpCount%10===0 && jumpCount>0){
-      level++; hudLvl.textContent=level; speed+=0.3;
-      obstacleColorIndex=(obstacleColorIndex+1)%obstacleColors.length;
-      obstacleColor=obstacleColors[obstacleColorIndex];
+      level++; hudLvl.textContent=level;
+      speed=baseSpeed+level*0.3; // faster with levels
+      colorIndex=(colorIndex+1)%flowerColors.length;
     }
   }
   input.justPressed=false;
@@ -154,11 +142,14 @@ function update(){
 
   // collisions
   for(const o of obstacles){
-    if(rectIntersectCircle(player,o)){
+    let rect={x:o.x,y:o.y-o.size,w:o.size,h:o.size};
+    if(circleRectCollide(player,rect)){
       attemptCount++; hudTries.textContent=attemptCount;
-      jumpCount=0; hudJumps.textContent=jumpCount;
+      // reset progress
+      jumpCount=0; level=1;
+      hudJumps.textContent=jumpCount; hudLvl.textContent=level;
       resetPlayer(); obstacles=[]; spawnTimer=0;
-      speed=4.0+0.3*(level-1);
+      speed=baseSpeed;
       break;
     }
   }
@@ -167,18 +158,21 @@ function update(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // sky
-  ctx.fillStyle="#87ceeb";
+  // gradient sky
+  let sky=ctx.createLinearGradient(0,0,0,GROUND_Y);
+  sky.addColorStop(0,"#87CEFA");
+  sky.addColorStop(1,"#cceeff");
+  ctx.fillStyle=sky;
   ctx.fillRect(0,0,canvas.width,GROUND_Y);
 
   // sun
   ctx.fillStyle="#FFD43B";
   ctx.beginPath();
-  ctx.arc(sun.x,sun.y,sun.r,0,Math.PI*2);
+  ctx.arc(canvas.width-80,80,40,0,Math.PI*2);
   ctx.fill();
 
   // clouds
-  ctx.fillStyle="#fff";
+  ctx.fillStyle="rgba(255,255,255,0.85)";
   for(const c of clouds){
     ctx.beginPath();
     ctx.ellipse(c.x,c.y,c.w/2,c.h/2,0,0,Math.PI*2);
@@ -187,28 +181,36 @@ function draw(){
     ctx.fill();
   }
 
-  // far trees
-  for(const t of treesFar){ drawTree(t.x,t.y,0.6); }
-  // near trees
-  for(const t of treesNear){ drawTree(t.x,t.y,1); }
+  // static trees
+  drawTree(200,GROUND_Y-100,1);
+  drawTree(400,GROUND_Y-110,1.2);
+  drawTree(600,GROUND_Y-90,0.9);
 
   // ground
   ctx.fillStyle=COLORS.ground;
   ctx.fillRect(0,GROUND_Y,canvas.width,canvas.height-GROUND_Y);
 
   // obstacles
-  ctx.fillStyle=obstacleColor;
   for(const o of obstacles){
-    ctx.save();
-    ctx.translate(o.x+o.w/2,o.y+o.h/2);
-    ctx.rotate(o.angle);
-    ctx.beginPath();
-    ctx.rect(-o.w/2,-o.h/2,o.w,o.h);
-    ctx.fill();
-    ctx.restore();
+    if(o.type==="bush"){
+      ctx.fillStyle="#228B22";
+      ctx.beginPath();
+      ctx.arc(o.x+o.size/2,o.y-10,o.size/2,0,Math.PI*2);
+      ctx.fill();
+    } else if(o.type==="flower"){
+      ctx.strokeStyle="#2E8B57"; ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.moveTo(o.x+o.size/2,o.y);
+      ctx.lineTo(o.x+o.size/2,o.y-o.size);
+      ctx.stroke();
+      ctx.fillStyle=flowerColors[colorIndex];
+      ctx.beginPath();
+      ctx.arc(o.x+o.size/2,o.y-o.size,8,0,Math.PI*2);
+      ctx.fill();
+    }
   }
 
-  // player circle
+  // player
   ctx.fillStyle=COLORS.player;
   ctx.beginPath();
   ctx.arc(player.x+player.r,player.y+player.r,player.r,0,Math.PI*2);
@@ -216,15 +218,19 @@ function draw(){
 }
 
 function drawTree(x,y,scale){
-  // trunk
   ctx.fillStyle="#4d2e0b";
-  ctx.fillRect(x-4*scale,y,8*scale,40*scale);
-  // foliage
+  ctx.fillRect(x-5*scale,y,10*scale,50*scale);
   ctx.fillStyle="#006400";
   ctx.beginPath();
-  ctx.moveTo(x,y-40*scale);
-  ctx.lineTo(x-30*scale,y+10*scale);
-  ctx.lineTo(x+30*scale,y+10*scale);
+  ctx.moveTo(x,y-50*scale);
+  ctx.lineTo(x-40*scale,y+10*scale);
+  ctx.lineTo(x+40*scale,y+10*scale);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x,y-80*scale);
+  ctx.lineTo(x-30*scale,y-20*scale);
+  ctx.lineTo(x+30*scale,y-20*scale);
   ctx.closePath();
   ctx.fill();
 }
@@ -233,9 +239,7 @@ function loop(){
   update(); draw();
   animationId=requestAnimationFrame(loop);
 }
-
-// init background
-initBackground();
 </script>
 </body>
 </html>
+
