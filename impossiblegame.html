@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Impossible Game - Easy Level 1</title>
+  <title>Impossible Game - 5 Levels</title>
   <style>
-    body { margin:0; background:#111; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; }
-    canvas { display:none; background:#222; }
-    #startBtn {
+    body { margin:0; background:#111; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
+    canvas { display:none; background:#222; margin-top:20px; }
+    button {
       padding: 15px 30px;
       font-size: 20px;
       border: none;
@@ -16,46 +16,48 @@
       cursor: pointer;
       box-shadow: 0 4px 8px rgba(0,0,0,0.4);
       transition: 0.2s;
+      margin: 10px;
     }
-    #startBtn:hover {
+    button:hover {
       background: darkorange;
       transform: scale(1.05);
     }
   </style>
 </head>
 <body>
+  <h1 style="color:white; font-family:sans-serif;">Impossible Game</h1>
   <button id="startBtn">Start Game</button>
+  <button id="retryBtn" style="display:none;">Retry</button>
+  <button id="nextBtn" style="display:none;">Next Level</button>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const startBtn = document.getElementById("startBtn");
+    const retryBtn = document.getElementById("retryBtn");
+    const nextBtn = document.getElementById("nextBtn");
 
-    // Player cube
-    const player = {
-      x: 50,
-      y: 300,
-      width: 30,
-      height: 30,
-      dy: 0,
-      gravity: 0.6,
-      jumpPower: -12,
-      grounded: false
-    };
+    let level = 1;
+    let player, obstacles, speed, gameOver, gameStarted, obstacleMove, win;
 
-    // Easier obstacles (shorter height)
-    const obstacles = [
-      {x: 400, y: 350, width: 20, height: 50},
-      {x: 700, y: 350, width: 20, height: 50},
-      {x: 1050, y: 350, width: 20, height: 50},
-      {x: 1400, y: 350, width: 20, height: 50}
-    ];
+    function setupLevel(lvl) {
+      player = { x: 50, y: 300, width: 30, height: 30, dy: 0, gravity: 0.6, jumpPower: -12, grounded: false };
 
-    let speed = 4; 
-    let gameOver = false;
-    let gameStarted = false;
-    let readyDelay = false; // delay before movement
+      // Each level gets harder
+      speed = 3 + lvl; 
+      const height = Math.max(20, 60 - lvl*5); // taller on easy, shorter jumps later
+      const spacing = 350 - lvl*50; // obstacles closer later
+      obstacles = [];
+      for (let i = 0; i < 4 + lvl; i++) {
+        obstacles.push({ x: 400 + i*spacing, y: 360 - height, width: 20, height: height });
+      }
+
+      gameOver = false;
+      gameStarted = false;
+      obstacleMove = false;
+      win = false;
+    }
 
     function drawPlayer() {
       ctx.fillStyle = "orange";
@@ -87,8 +89,7 @@
         player.grounded = false;
       }
 
-      if (readyDelay) {
-        // Move obstacles
+      if (obstacleMove) {
         for (let obs of obstacles) {
           obs.x -= speed;
 
@@ -100,9 +101,21 @@
             player.y + player.height > obs.y
           ) {
             gameOver = true;
-            alert("Game Over! Try Again.");
-            document.location.reload();
+            retryBtn.style.display = "inline-block";
+            return;
           }
+        }
+
+        // Win condition
+        if (obstacles[obstacles.length - 1].x + obstacles[0].width < 0 && !win) {
+          win = true;
+          if (level < 5) {
+            nextBtn.style.display = "inline-block";
+          } else {
+            alert("🎉 You beat all 5 levels! 🎉");
+            retryBtn.style.display = "inline-block";
+          }
+          return;
         }
       }
 
@@ -123,17 +136,31 @@
       if (e.code === "Space") jump();
     });
 
-    // Start button
     startBtn.addEventListener("click", () => {
       startBtn.style.display = "none";
       canvas.style.display = "block";
+      setupLevel(level);
       gameStarted = true;
+      setTimeout(() => obstacleMove = true, 2000);
+      update();
+    });
 
-      // 2 second delay before obstacles move
-      setTimeout(() => {
-        readyDelay = true;
-      }, 2000);
+    retryBtn.addEventListener("click", () => {
+      retryBtn.style.display = "none";
+      nextBtn.style.display = "none";
+      setupLevel(level);
+      gameStarted = true;
+      setTimeout(() => obstacleMove = true, 2000);
+      update();
+    });
 
+    nextBtn.addEventListener("click", () => {
+      level++;
+      retryBtn.style.display = "none";
+      nextBtn.style.display = "none";
+      setupLevel(level);
+      gameStarted = true;
+      setTimeout(() => obstacleMove = true, 2000);
       update();
     });
   </script>
