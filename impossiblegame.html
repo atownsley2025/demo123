@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <title>Endless Impossible Game</title>
 <style>
-  body{margin:0;background:#0f1226;color:#eee;font-family:sans-serif;display:flex;flex-direction:column;align-items:center}
-  canvas{background:#0b0f27;border:2px solid #262a54;border-radius:12px;box-shadow:0 10px 30px #0008}
+  body{margin:0;background:#0a0f2c;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center}
+  canvas{background:#0d153d;border:2px solid #1e2f78;border-radius:12px;box-shadow:0 10px 30px #0008}
   #hud{margin:10px;font-size:18px}
-  button{margin:6px;padding:10px 14px;border-radius:8px;border:none;background:#1b1e3f;color:#eee;font-weight:600;cursor:pointer}
+  button{margin:6px;padding:10px 14px;border-radius:8px;border:none;background:#1e2f78;color:#fff;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
-<h2>The Impossible Endless Game</h2>
+<h2>Endless Jump Game</h2>
 <div id="hud">Level: <span id="lvl">1</span> · Attempts: <span id="tries">0</span> · Jumps: <span id="jumps">0</span></div>
 <canvas id="game" width="800" height="400"></canvas>
 <button id="btnStart">▶ Start</button>
@@ -33,9 +33,15 @@ const player={x:80,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true,jumpsLeft:2,maxJum
 const input={justPressed:false};
 const gravity=0.6;
 let speed=4.0;
-let obstacles=[]; // spawn list
+let obstacles=[]; 
 let spawnTimer=0;
-const COLORS={player:"#8ef",obstacle:"#ff4d6d",ground:"#1c2045"};
+
+// new color scheme
+const COLORS={
+  player:"#FFD43B",   // yellow
+  obstacle:"#3BA9FF", // light blue
+  ground:"#1a224b"    // dark navy
+};
 
 function pressJump(){input.justPressed=true;}
 window.addEventListener("keydown",e=>{
@@ -52,6 +58,7 @@ function resetGame(){
   hudLvl.textContent=level;
   obstacles=[];
   resetPlayer();
+  speed=4.0;
 }
 
 function resetPlayer(){
@@ -62,14 +69,14 @@ function rectIntersect(a,b){return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && 
 
 function update(){
   if(STATE!=="running")return;
-  // spawn new obstacles
+
+  // spawn obstacles
   spawnTimer-=speed;
   if(spawnTimer<=0){
     const h=40+Math.random()*60;
     obstacles.push({x:canvas.width+40,y:GROUND_Y-h,w:20+Math.random()*20,h:h});
     spawnTimer=200+Math.random()*200;
   }
-
   // move obstacles
   for(const o of obstacles){o.x-=speed;}
   obstacles=obstacles.filter(o=>o.x+o.w>0);
@@ -82,10 +89,10 @@ function update(){
     player.jumpsLeft--;
     jumpCount++;
     hudJumps.textContent=jumpCount;
-    if(jumpCount%10===0){ // every 10 jumps, level up
+    if(jumpCount%10===0 && jumpCount>0){
       level++;
       hudLvl.textContent=level;
-      speed+=0.3; // harder
+      speed+=0.3;
     }
   }
   input.justPressed=false;
@@ -105,6 +112,9 @@ function update(){
     if(rectIntersect(player,o)){
       attemptCount++;
       hudTries.textContent=attemptCount;
+      // reset both player + jump count
+      jumpCount=0;
+      hudJumps.textContent=jumpCount;
       resetPlayer();
       obstacles=[];
       spawnTimer=0;
