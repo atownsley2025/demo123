@@ -40,6 +40,7 @@
           <span class="pill">The Impossible (but actually beatable) Game</span>
           <button id="btnStart" class="btn">▶ Start</button>
           <button id="btnReset" class="btn" title="Reset current level">↻ Reset</button>
+          <button id="btnMenu" class="btn" title="Main Menu">☰ Menu</button>
         </div>
         <div class="right">
           <label class="pill" title="Lower is easier">Gravity
@@ -57,7 +58,7 @@
       <div style="position:relative">
         <canvas id="game" width="960" height="420" tabindex="0"></canvas>
         <div id="overlay" class="overlay"></div>
-        <div id="hud" class="hud">Level: <span id="lvl">1</span> / 5 · Attempts: <span id="tries">0</span></div>
+        <div id="hud" class="hud">Level: <span id="lvl">1</span> / 5 · Attempts: <span id="tries">0</span> · Jumps: <span id="jumps">2</span>x</div>
         <div id="toast" class="toast">Level Complete!</div>
       </div>
       <div class="mobile-ctr">
@@ -73,8 +74,10 @@
   const toast = document.getElementById('toast');
   const lvlEl = document.getElementById('lvl');
   const triesEl = document.getElementById('tries');
+  const jumpsEl = document.getElementById('jumps');
   const btnStart = document.getElementById('btnStart');
   const btnReset = document.getElementById('btnReset');
+  const btnMenu = document.getElementById('btnMenu');
   const tapJump = document.getElementById('tapJump');
   const gravSlider = document.getElementById('grav');
   const jumpSlider = document.getElementById('jump');
@@ -88,77 +91,44 @@
   let attemptCount = 0;
 
   const camera = {x:0};
-  const player = {x:40,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true};
+  const player = {x:40,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true,jumpsLeft:2,maxJumps:2};
   let levelIndex = 0;
   const input = {justPressed:false};
 
   function r(x,y,w,h){return {x,y,w,h}}
   const LEVELS = [
-    // Adjusted Level 1: added more spacing at the end so the last jumps are possible
-    { length: 2000, endX: 1920, obstacles: [
-        r(280,280,30,60), r(480,300,26,40), r(650,300,26,40), r(820,300,26,40), 
-        r(1000,270,26,70), r(1180,300,20,40), r(1280,300,28,40), 
-        // widened gap here before final obstacles
-        r(1500,280,30,60), r(1660,300,22,40)
-    ]},
-    { length: 2100, endX: 2020, obstacles: [ r(320,300,28,40), r(380,300,28,40), r(520,280,30,60), r(760,300,28,40), r(820,300,28,40), r(1030,260,30,80), r(1160,300,20,40), r(1300,300,24,40), r(1440,300,28,40), r(1560,280,30,60), r(1660,300,20,40), r(1760,300,24,40) ]},
-    { length: 2400, endX: 2320, obstacles: [ r(300,300,26,40), r(420,300,26,40), r(540,300,26,40), r(660,280,30,60), r(820,300,26,40), r(940,300,26,40), r(1060,300,26,40), r(1180,280,28,60), r(1320,300,26,40), r(1480,260,30,80), r(1640,300,20,40), r(1780,300,24,40), r(1900,300,26,40), r(2060,280,30,60) ]},
-    { length: 2600, endX: 2520, obstacles: [ r(360,300,26,40), r(520,300,26,40), r(600,280,30,60), r(740,300,26,40), r(860,300,26,40), r(980,260,30,80), r(1140,300,22,40), r(1280,300,24,40), r(1420,300,26,40), r(1540,280,30,60), r(1680,300,20,40), r(1820,300,22,40), r(1960,300,24,40), r(2100,280,30,60), r(2240,300,24,40) ]},
-    { length: 3000, endX: 2920, obstacles: [ r(360,300,24,40), r(420,300,24,40), r(540,280,28,60), r(680,300,24,40), r(760,300,24,40), r(920,260,30,80), r(1060,300,22,40), r(1120,300,22,40), r(1280,280,28,60), r(1420,300,24,40), r(1560,300,24,40), r(1700,280,28,60), r(1840,300,22,40), r(1980,300,22,40), r(2120,300,24,40), r(2260,280,28,60), r(2420,300,24,40), r(2580,300,24,40), r(2740,280,28,60) ]}
+    { length: 2000, endX: 1920, obstacles: [ r(280,280,30,60), r(480,300,26,40), r(650,300,26,40), r(820,300,26,40), r(1000,270,26,70), r(1180,300,20,40), r(1280,300,28,40), r(1500,280,30,60), r(1660,300,22,40) ]},
+    { length: 2300, endX: 2220, obstacles: [ r(320,300,28,40), r(460,300,28,40), r(640,280,30,60), r(880,300,28,40), r(1040,300,28,40), r(1280,260,30,80), r(1440,300,20,40), r(1600,300,24,40), r(1760,300,28,40), r(1920,280,30,60), r(2080,300,20,40) ]},
+    { length: 2600, endX: 2520, obstacles: [ r(300,300,26,40), r(500,300,26,40), r(700,300,26,40), r(900,280,30,60), r(1100,300,26,40), r(1300,300,26,40), r(1500,300,26,40), r(1700,280,28,60), r(1900,300,26,40), r(2100,260,30,80), r(2260,300,20,40), r(2420,300,24,40) ]},
+    { length: 2800, endX: 2720, obstacles: [ r(360,300,26,40), r(560,300,26,40), r(760,280,30,60), r(960,300,26,40), r(1160,300,26,40), r(1360,260,30,80), r(1560,300,22,40), r(1760,300,24,40), r(1960,300,26,40), r(2160,280,30,60), r(2360,300,20,40), r(2560,300,22,40) ]},
+    { length: 3300, endX: 3220, obstacles: [ r(360,300,24,40), r(520,300,24,40), r(720,280,28,60), r(920,300,24,40), r(1120,300,24,40), r(1320,260,30,80), r(1520,300,22,40), r(1720,300,22,40), r(1920,280,28,60), r(2120,300,24,40), r(2320,300,24,40), r(2520,280,28,60), r(2720,300,22,40), r(2920,300,22,40), r(3120,280,28,60) ]}
   ];
 
   function pressJump(){ input.justPressed = true; }
-  window.addEventListener('keydown', e=>{
-    if(['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); pressJump(); }
-  });
+  window.addEventListener('keydown', e=>{ if(['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); pressJump(); } });
   window.addEventListener('pointerdown', pressJump);
   tapJump.addEventListener('click', e=>{ e.stopPropagation(); pressJump(); });
 
   function params(){ return { gravity: parseFloat(gravSlider.value), jump: parseFloat(jumpSlider.value), speed: parseFloat(speedSlider.value) }; }
-  function resetPlayer(){ Object.assign(player,{x:40,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true}); camera.x=0; }
+  function resetPlayer(){ Object.assign(player,{x:40,y:GROUND_Y-28,w:26,h:26,vy:0,onGround:true,jumpsLeft:player.maxJumps}); camera.x=0; updateJumpsHud(); }
 
-  function showOverlayStart(){ overlay.innerHTML = ` <div class="card" style="pointer-events:auto"> <h2 class="title">Ready?</h2> <p class="subtitle">Jump the red blocks. Touch the green flag to finish each level.</p> <div class="row"> <button class="btn" id="oStart">▶ Start Game</button> </div> <div class="ghost">Controls: <span class="kbd">Space</span> / <span class="kbd">Click</span> · Reset: <span class="kbd">R</span></div> </div>`; document.getElementById('oStart').onclick = startWithCountdown; }
+  function showOverlayStart(){ overlay.innerHTML = `<div class="card" style="pointer-events:auto"><h2 class="title">Main Menu</h2><p class="subtitle">Double-jump enabled! Jump the red blocks. Touch the green flag to finish each level.</p><div class="row"><button class="btn" id="oStart">▶ Start Game</button></div><div class="ghost">Controls: <span class="kbd">Space</span> / <span class="kbd">Click</span> · Reset: <span class="kbd">R</span> · Menu: <span class="kbd">Esc</span></div></div>`; document.getElementById('oStart').onclick = startWithCountdown; }
   function startWithCountdown(){ overlay.innerHTML=''; countdownLeft=3; STATE='countdown'; }
   function showToast(msg){ toast.textContent=msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1200); }
+  function goToMainMenu(){ resetPlayer(); showOverlayStart(); STATE='idle'; }
 
-  function nextLevel(){ levelIndex++; if(levelIndex>=LEVELS.length){ STATE='gameover'; overlay.innerHTML = ` <div class="card" style="pointer-events:auto"> <h2 class="title">🎉 You beat all 5 levels!</h2> <p class="subtitle">Attempts: ${attemptCount}</p> <div class="row"><button class="btn" id="again">Play Again</button></div> </div>`; document.getElementById('again').onclick = ()=>{ levelIndex=0; attemptCount=0; triesEl.textContent=attemptCount; lvlEl.textContent=levelIndex+1; resetPlayer(); showOverlayStart(); STATE='idle'; }; return; } lvlEl.textContent = levelIndex+1; resetPlayer(); showToast('Level '+levelIndex+' complete!'); countdownLeft=2; STATE='countdown'; }
+  function nextLevel(){ levelIndex++; if(levelIndex>=LEVELS.length){ STATE='gameover'; overlay.innerHTML = `<div class="card" style="pointer-events:auto"><h2 class="title">🎉 You beat all 5 levels!</h2><p class="subtitle">Attempts: ${attemptCount}</p><div class="row"><button class="btn" id="again">Play Again</button><button class="btn" id="menuBtn">Main Menu</button></div></div>`; document.getElementById('again').onclick = ()=>{ levelIndex=0; attemptCount=0; triesEl.textContent=attemptCount; lvlEl.textContent=levelIndex+1; resetPlayer(); showOverlayStart(); STATE='idle'; }; document.getElementById('menuBtn').onclick = goToMainMenu; return; } lvlEl.textContent = levelIndex+1; resetPlayer(); showToast('Level '+levelIndex+' complete!'); countdownLeft=2; STATE='countdown'; }
 
   btnStart.addEventListener('click', ()=>{ if(STATE==='idle') startWithCountdown(); });
   btnReset.addEventListener('click', ()=>{ resetPlayer(); countdownLeft=2; STATE='countdown'; });
-  window.addEventListener('keydown', e=>{ if(e.key.toLowerCase()==='r'){ resetPlayer(); countdownLeft=2; STATE='countdown'; }});
+  btnMenu.addEventListener('click', goToMainMenu);
+  window.addEventListener('keydown', e=>{ if(e.key.toLowerCase()==='r'){ resetPlayer(); countdownLeft=2; STATE='countdown'; } if(e.key==='Escape'){ goToMainMenu(); }});
 
   function rectIntersect(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y }
+  function updateJumpsHud(){ jumpsEl.textContent = player.jumpsLeft; }
 
-  function update(dt){
-    const P = params();
-    if(STATE==='countdown'){ countdownLeft -= dt; if(countdownLeft<=0){ STATE='running'; } return; }
-    if(STATE!=='running') return;
-
-    player.x += P.speed;
-    player.vy += P.gravity;
-    if(player.onGround && input.justPressed){ player.vy = -P.jump; player.onGround=false; }
-    player.y += player.vy;
-    if(player.y + player.h >= GROUND_Y){ player.y = GROUND_Y - player.h; player.vy = 0; player.onGround = true; }
-
-    const L = LEVELS[levelIndex];
-    for(const o of L.obstacles){ if(rectIntersect(player,o)){ attemptCount++; triesEl.textContent=attemptCount; resetPlayer(); countdownLeft=2; STATE='countdown'; return; } }
-    const endRect = {x:L.endX, y:GROUND_Y-60, w:24, h:60};
-    if(rectIntersect(player,endRect)){ STATE='levelclear'; setTimeout(nextLevel,300); }
-
-    camera.x = Math.max(0, Math.min(player.x - canvas.width*0.3, L.length - canvas.width));
-    input.justPressed = false;
-  }
+  function update(dt){ const P = params(); if(STATE==='countdown'){ countdownLeft -= dt; if(countdownLeft<=0){ STATE='running'; } return; } if(STATE!=='running') return; player.x += P.speed; player.vy += P.gravity; if(input.justPressed && player.jumpsLeft > 0){ player.vy = -P.jump; player.onGround=false; player.jumpsLeft--; updateJumpsHud(); } player.y += player.vy; if(player.y + player.h >= GROUND_Y){ player.y = GROUND_Y - player.h; player.vy = 0; if(!player.onGround){ player.onGround = true; player.jumpsLeft = player.maxJumps; updateJumpsHud(); } } else { player.onGround = false; } const L = LEVELS[levelIndex]; for(const o of L.obstacles){ if(rectIntersect(player,o)){ attemptCount++; triesEl.textContent=attemptCount; resetPlayer(); countdownLeft=2; STATE='countdown'; return; } } const endRect = {x:L.endX, y:GROUND_Y-60, w:24, h:60}; if(rectIntersect(player,endRect)){ STATE='levelclear'; setTimeout(nextLevel,300); } camera.x = Math.max(0, Math.min(player.x - canvas.width*0.3, L.length - canvas.width)); input.justPressed = false; }
 
   function roundRect(ctx, x, y, w, h, r){ if(w<2*r) r=w/2; if(h<2*r) r=h/2; ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.fill(); }
 
-  function draw(){
-    const L = LEVELS[levelIndex];
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = COLORS.ground; ctx.fillRect(0, GROUND_Y-2, canvas.width, canvas.height-(GROUND_Y-2));
-    ctx.fillStyle = '#2b2e57'; ctx.fillRect(0, GROUND_Y, canvas.width, 2);
-    const ex = Math.floor(L.endX - camera.x);
-    if(ex>-40 && ex<canvas.width+40){ ctx.fillStyle = COLORS.end; ctx.fillRect(ex, GROUND_Y-60, 4, 60); ctx.beginPath(); ctx.moveTo(ex+4, GROUND_Y-60); ctx.lineTo(ex+24, GROUND_Y-50); ctx.lineTo(ex+4, GROUND_Y-40); ctx.closePath(); ctx.fill(); }
-    ctx.fillStyle = COLORS.obstacle; for(const o of L.obstacles){ const sx = Math.floor(o.x - camera.x); if(sx+o.w<-10||sx>canvas.width+10) continue; roundRect(ctx, sx, o.y, o.w, o.h, 4); }
-    ctx.fillStyle = COLORS.player; roundRect(ctx, Math.floor(player.x - camera.x), Math.floor(player.y), player.w, player.h, 6);
-    if(STATE==='countdown'){ const t = Math.max(0, Math.ceil(countdownLeft)); ctx.save(); ctx.globalAlpha=.9; ctx.translate(canvas.width/2, canvas.height/3); ctx.fillStyle='#fff'; ctx.font='bold 80px system-ui,Segoe UI,Inter,Arial'; ctx.textAlign='center'; ctx.fillText(t>0? t: 'GO!', 0,0); ctx.restore(); }
-    ctx.fillStyle='#2b2e57'; ctx.fillRect(20,20,canvas.width-40,6); const progress = Math.min(1, Math.max(0, player.x
+  function draw(){ const L = LEVELS[levelIndex]; ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = COLORS.ground; ctx.fillRect(0, GROUND_Y-2, canvas.width, canvas.height-(GROUND_Y-2)); ctx.fillStyle = '#2b2e57'; ctx.fillRect(0, GROUND_Y, canvas.width, 2); const ex = Math.floor(L.endX - camera.x); if(ex>-40 && ex<canvas.width+40){ ctx.fillStyle = COLORS.end; ctx.fillRect(ex, GROUND_Y-60, 4, 60); ctx.beginPath(); ctx.moveTo(ex+4, GROUND_Y-60); ctx.lineTo(ex+24, GROUND_Y-50); ctx.lineTo(ex+4, GROUND_Y-40); ctx.closePath(); ctx.fill(); } ctx.fillStyle = COLORS.obstacle; for(const o of L.obstacles){ const sx = Math.floor(o.x - camera.x); if(sx+o.w<-10||sx>canvas.width+10) continue; roundRect(ctx, sx, o.y, o.w, o.h, 4); } ctx.fillStyle = COLORS.player; roundRect(ctx, Math.floor(player.x - camera.x), Math.floor(player.y), player.w, player.h, 6); if(STATE==='countdown'){ const t = Math.max(0, Math.ceil(countdownLeft)); ctx.save(); ctx.globalAlpha=.9; ctx.translate(canvas.width/2, canvas.height/3); ctx.fillStyle='#fff'; ctx.font='bold 80px system-ui,Segoe UI,Inter,Arial'; ctx.textAlign='center'; ctx.fillText(t>0? t: 'GO!', 0,0); ctx.restore(); } ctx.fillStyle='#2b
