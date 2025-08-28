@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Endless Circle Runner</title>
+<title>Endless Outdoor Runner</title>
 <style>
   body {
-    margin:0; background:#0a0f2c; color:#fff; 
-    font-family:sans-serif; display:flex; flex-direction:column; align-items:center
+    margin:0; background:#87ceeb;
+    color:#fff; font-family:sans-serif; display:flex; flex-direction:column; align-items:center
   }
   canvas {
-    background:#0d153d; border:2px solid #1e2f78; border-radius:12px; 
+    background:#87ceeb; border:2px solid #1e2f78; border-radius:12px;
     box-shadow:0 10px 30px #0008; margin-top:8px;
   }
-  #hud {margin:10px;font-size:18px}
+  #hud {margin:10px;font-size:18px;color:#111;font-weight:bold}
   button {
     margin:6px; padding:10px 14px; border-radius:8px; border:none;
     background:#1e2f78; color:#fff; font-weight:600; cursor:pointer
@@ -20,7 +20,7 @@
 </style>
 </head>
 <body>
-<h2>Endless Circle Runner</h2>
+<h2 style="color:#111;">Endless Outdoor Runner</h2>
 <div id="hud">Level: <span id="lvl">1</span> · Attempts: <span id="tries">0</span> · Jumps: <span id="jumps">0</span></div>
 <canvas id="game" width="800" height="400"></canvas>
 <div>
@@ -49,10 +49,26 @@ let obstacles=[];
 let spawnTimer=0;
 let animationId;
 
+// Background elements
+let treesFar=[], treesNear=[];
+let clouds=[];
+let sun={x:100,y:80,r:30};
+
+function initBackground(){
+  treesFar=[]; treesNear=[]; clouds=[];
+  for(let i=0;i<8;i++){ treesFar.push({x:i*120+Math.random()*60,y:GROUND_Y-80}); }
+  for(let i=0;i<6;i++){ treesNear.push({x:i*200+Math.random()*80,y:GROUND_Y-100}); }
+  for(let i=0;i<5;i++){ clouds.push({x:i*180+Math.random()*100,y:40+Math.random()*50,w:60+Math.random()*40,h:30+Math.random()*10}); }
+}
+
+// Color palette cycle for obstacles
+const obstacleColors=["#3BA9FF","#3BFFD9","#6BFF3B","#FFD43B","#FF6B3B"];
+let obstacleColorIndex=0;
+let obstacleColor=obstacleColors[0];
+
 const COLORS={
-  player:"#FFD43B",   // yellow
-  obstacle:"#3BA9FF", // light blue
-  ground:"#1a224b"    // dark navy
+  player:"#FFD43B",
+  ground:"#228B22" // grass
 };
 
 function pressJump(){input.justPressed=true;}
@@ -71,6 +87,9 @@ function resetGame(){
   hudLvl.textContent=level;
   obstacles=[]; spawnTimer=0;
   resetPlayer(); speed=4.0;
+  obstacleColorIndex=0; obstacleColor=obstacleColors[0];
+  initBackground();
+  sun={x:100,y:80,r:30};
 }
 
 function resetPlayer(){
@@ -78,7 +97,6 @@ function resetPlayer(){
 }
 
 function rectIntersectCircle(circle,rect){
-  // clamp circle center to rectangle
   const cx=circle.x+circle.r, cy=circle.y+circle.r;
   const rx=Math.max(rect.x,Math.min(cx,rect.x+rect.w));
   const ry=Math.max(rect.y,Math.min(cy,rect.y+rect.h));
@@ -100,6 +118,16 @@ function update(){
   for(const o of obstacles){o.x-=speed; o.angle+=0.05;}
   obstacles=obstacles.filter(o=>o.x+o.w>0);
 
+  // move background trees
+  for(const t of treesFar){t.x-=speed*0.3; if(t.x<-40) t.x=canvas.width+Math.random()*60;}
+  for(const t of treesNear){t.x-=speed*0.6; if(t.x<-40) t.x=canvas.width+Math.random()*80;}
+
+  // move clouds
+  for(const c of clouds){c.x-=1; if(c.x+c.w<0) c.x=canvas.width+Math.random()*100;}
+  
+  // drift sun
+  sun.x+=0.02; sun.y+=Math.sin(Date.now()/5000)*0.02;
+
   // physics
   player.vy+=gravity;
   if(input.justPressed && player.jumpsLeft>0){
@@ -109,6 +137,8 @@ function update(){
     jumpCount++; hudJumps.textContent=jumpCount;
     if(jumpCount%10===0 && jumpCount>0){
       level++; hudLvl.textContent=level; speed+=0.3;
+      obstacleColorIndex=(obstacleColorIndex+1)%obstacleColors.length;
+      obstacleColor=obstacleColors[obstacleColorIndex];
     }
   }
   input.justPressed=false;
@@ -136,12 +166,38 @@ function update(){
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // sky
+  ctx.fillStyle="#87ceeb";
+  ctx.fillRect(0,0,canvas.width,GROUND_Y);
+
+  // sun
+  ctx.fillStyle="#FFD43B";
+  ctx.beginPath();
+  ctx.arc(sun.x,sun.y,sun.r,0,Math.PI*2);
+  ctx.fill();
+
+  // clouds
+  ctx.fillStyle="#fff";
+  for(const c of clouds){
+    ctx.beginPath();
+    ctx.ellipse(c.x,c.y,c.w/2,c.h/2,0,0,Math.PI*2);
+    ctx.ellipse(c.x+20,c.y-10,c.w/2.5,c.h/2.5,0,0,Math.PI*2);
+    ctx.ellipse(c.x+40,c.y,c.w/2.5,c.h/2.5,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  // far trees
+  for(const t of treesFar){ drawTree(t.x,t.y,0.6); }
+  // near trees
+  for(const t of treesNear){ drawTree(t.x,t.y,1); }
+
   // ground
   ctx.fillStyle=COLORS.ground;
   ctx.fillRect(0,GROUND_Y,canvas.width,canvas.height-GROUND_Y);
 
-  // obstacles as rotating diamonds
-  ctx.fillStyle=COLORS.obstacle;
+  // obstacles
+  ctx.fillStyle=obstacleColor;
   for(const o of obstacles){
     ctx.save();
     ctx.translate(o.x+o.w/2,o.y+o.h/2);
@@ -151,6 +207,7 @@ function draw(){
     ctx.fill();
     ctx.restore();
   }
+
   // player circle
   ctx.fillStyle=COLORS.player;
   ctx.beginPath();
@@ -158,10 +215,27 @@ function draw(){
   ctx.fill();
 }
 
+function drawTree(x,y,scale){
+  // trunk
+  ctx.fillStyle="#4d2e0b";
+  ctx.fillRect(x-4*scale,y,8*scale,40*scale);
+  // foliage
+  ctx.fillStyle="#006400";
+  ctx.beginPath();
+  ctx.moveTo(x,y-40*scale);
+  ctx.lineTo(x-30*scale,y+10*scale);
+  ctx.lineTo(x+30*scale,y+10*scale);
+  ctx.closePath();
+  ctx.fill();
+}
+
 function loop(){
   update(); draw();
   animationId=requestAnimationFrame(loop);
 }
+
+// init background
+initBackground();
 </script>
 </body>
 </html>
