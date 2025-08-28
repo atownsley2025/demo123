@@ -58,13 +58,13 @@ for(let i=0;i<5;i++){
   clouds.push({x:i*160+Math.random()*100,y:40+Math.random()*60,w:60+Math.random()*40,h:30+Math.random()*15});
 }
 
-// Flower colors (shades of pink + white)
-const flowerColors=["#FFC0CB","#FFB6C1","#FF69B4","#F8BBD0","#fff"];
-let colorIndex=0;
+// Flower colors (mix of pinks + white)
+const flowerColors=["#FFC0CB","#FF69B4","#FFFFFF"];
 
 const COLORS={
   player:"#FFD43B",
-  ground:"#2E8B57" 
+  groundTop:"#3CB371",
+  groundBottom:"#2E8B57"
 };
 
 function pressJump(){input.justPressed=true;}
@@ -83,7 +83,6 @@ function resetGame(){
   hudLvl.textContent=level;
   obstacles=[]; spawnTimer=0;
   resetPlayer(); speed=baseSpeed;
-  colorIndex=0;
 }
 
 function resetPlayer(){
@@ -103,7 +102,7 @@ function update(){
 
   spawnTimer-=speed;
   if(spawnTimer<=0){
-    obstacles.push({x:canvas.width+40,type:"flower",size:30+Math.random()*15,y:GROUND_Y});
+    obstacles.push({x:canvas.width+40,type:"flower",size:30+Math.random()*15,y:GROUND_Y,color:flowerColors[Math.floor(Math.random()*flowerColors.length)]});
     spawnTimer=baseSpawn - (level*5) + Math.random()*120;
     if(spawnTimer<80) spawnTimer=80;
   }
@@ -121,7 +120,6 @@ function update(){
     if(jumpCount%10===0 && jumpCount>0){
       level++; hudLvl.textContent=level;
       speed=baseSpeed+level*0.3;
-      colorIndex=(colorIndex+1)%flowerColors.length;
     }
   }
   input.justPressed=false;
@@ -151,18 +149,25 @@ function update(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
+  // gradient sky
   let sky=ctx.createLinearGradient(0,0,0,GROUND_Y);
-  sky.addColorStop(0,"#87CEFA");
-  sky.addColorStop(1,"#cceeff");
+  sky.addColorStop(0,"#a8d8ff");
+  sky.addColorStop(1,"#e6f7ff");
   ctx.fillStyle=sky;
   ctx.fillRect(0,0,canvas.width,GROUND_Y);
 
-  ctx.fillStyle="#FFD43B";
+  // glowing sun
+  let sunX=canvas.width-100, sunY=90;
+  let grad=ctx.createRadialGradient(sunX,sunY,20,sunX,sunY,80);
+  grad.addColorStop(0,"#FFD43B");
+  grad.addColorStop(1,"rgba(255,212,59,0)");
+  ctx.fillStyle=grad;
   ctx.beginPath();
-  ctx.arc(canvas.width-80,80,40,0,Math.PI*2);
+  ctx.arc(sunX,sunY,80,0,Math.PI*2);
   ctx.fill();
 
-  ctx.fillStyle="rgba(255,255,255,0.85)";
+  // clouds
+  ctx.fillStyle="rgba(255,255,255,0.8)";
   for(const c of clouds){
     ctx.beginPath();
     ctx.ellipse(c.x,c.y,c.w/2,c.h/2,0,0,Math.PI*2);
@@ -171,17 +176,24 @@ function draw(){
     ctx.fill();
   }
 
+  // trees
   drawTree(200,GROUND_Y,1);
   drawTree(400,GROUND_Y,1.2);
   drawTree(600,GROUND_Y,0.9);
 
-  ctx.fillStyle=COLORS.ground;
+  // ground gradient
+  let ground=ctx.createLinearGradient(0,GROUND_Y,0,canvas.height);
+  ground.addColorStop(0,COLORS.groundTop);
+  ground.addColorStop(1,COLORS.groundBottom);
+  ctx.fillStyle=ground;
   ctx.fillRect(0,GROUND_Y,canvas.width,canvas.height-GROUND_Y);
 
+  // obstacles (flowers only)
   for(const o of obstacles){
-    drawFlower(o.x+o.size/2,o.y,o.size);
+    drawFlower(o.x+o.size/2,o.y,o.size,o.color);
   }
 
+  // player
   ctx.fillStyle=COLORS.player;
   ctx.beginPath();
   ctx.arc(player.x+player.r,player.y+player.r,player.r,0,Math.PI*2);
@@ -203,17 +215,17 @@ function drawTree(x,groundY,scale){
   });
 }
 
-function drawFlower(x,y,size){
+function drawFlower(x,y,size,color){
   // stem
   ctx.strokeStyle="#2E8B57"; ctx.lineWidth=3;
   ctx.beginPath();
   ctx.moveTo(x,y);
   ctx.lineTo(x,y-size);
   ctx.stroke();
-  // petals
+  // petals (circle around center)
   const petalCount=6;
   const radius=12;
-  ctx.fillStyle=flowerColors[colorIndex];
+  ctx.fillStyle=color;
   for(let i=0;i<petalCount;i++){
     const angle=(Math.PI*2/petalCount)*i;
     const px=x+Math.cos(angle)*radius;
@@ -236,3 +248,4 @@ function loop(){
 </script>
 </body>
 </html>
+
