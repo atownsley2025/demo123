@@ -58,7 +58,17 @@ for(let i=0;i<5;i++){
   clouds.push({x:i*160+Math.random()*100,y:40+Math.random()*60,w:60+Math.random()*40,h:30+Math.random()*15});
 }
 
-// Flower colors (mix of pinks + white)
+// Birds & Butterflies
+let birds=[];
+let butterflies=[];
+for(let i=0;i<4;i++){
+  birds.push({x:Math.random()*canvas.width,y:60+Math.random()*40,speed:1+Math.random()*0.5});
+}
+for(let i=0;i<5;i++){
+  butterflies.push({x:Math.random()*canvas.width,y:150+Math.random()*100,dir:Math.random()<0.5?-1:1,color:`hsl(${Math.random()*360},70%,60%)`});
+}
+
+// Flower colors
 const flowerColors=["#FFC0CB","#FF69B4","#FFFFFF"];
 
 const COLORS={
@@ -111,6 +121,13 @@ function update(){
 
   for(const c of clouds){c.x-=0.5; if(c.x+c.w<0) c.x=canvas.width+Math.random()*100;}
 
+  for(const b of birds){ b.x-=b.speed; if(b.x<-20){b.x=canvas.width+40; b.y=60+Math.random()*40;} }
+  for(const bf of butterflies){
+    bf.x+=bf.dir*1.2; 
+    bf.y+=Math.sin(Date.now()/300+bf.x/50)*0.5; 
+    if(bf.x<-20||bf.x>canvas.width+20){bf.dir*=-1;}
+  }
+
   player.vy+=gravity;
   if(input.justPressed && player.jumpsLeft>0){
     player.vy=-12;
@@ -149,14 +166,14 @@ function update(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // gradient sky
+  // sky
   let sky=ctx.createLinearGradient(0,0,0,GROUND_Y);
   sky.addColorStop(0,"#a8d8ff");
   sky.addColorStop(1,"#e6f7ff");
   ctx.fillStyle=sky;
   ctx.fillRect(0,0,canvas.width,GROUND_Y);
 
-  // glowing sun
+  // sun glow
   let sunX=canvas.width-100, sunY=90;
   let grad=ctx.createRadialGradient(sunX,sunY,20,sunX,sunY,80);
   grad.addColorStop(0,"#FFD43B");
@@ -176,10 +193,38 @@ function draw(){
     ctx.fill();
   }
 
-  // trees
-  drawTree(200,GROUND_Y,1);
-  drawTree(400,GROUND_Y,1.2);
-  drawTree(600,GROUND_Y,0.9);
+  // birds
+  ctx.strokeStyle="#333"; ctx.lineWidth=2;
+  for(const b of birds){
+    ctx.beginPath();
+    ctx.moveTo(b.x,b.y);
+    ctx.lineTo(b.x+8,b.y+4);
+    ctx.moveTo(b.x,b.y);
+    ctx.lineTo(b.x-8,b.y+4);
+    ctx.stroke();
+  }
+
+  // butterflies
+  for(const bf of butterflies){
+    ctx.fillStyle=bf.color;
+    ctx.beginPath();
+    ctx.moveTo(bf.x,bf.y);
+    ctx.lineTo(bf.x-6,bf.y-4);
+    ctx.lineTo(bf.x-6,bf.y+4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(bf.x,bf.y);
+    ctx.lineTo(bf.x+6,bf.y-4);
+    ctx.lineTo(bf.x+6,bf.y+4);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // trees (more of them)
+  for(let i=100;i<800;i+=150){
+    drawTree(i,GROUND_Y,1+Math.random()*0.3);
+  }
 
   // ground gradient
   let ground=ctx.createLinearGradient(0,GROUND_Y,0,canvas.height);
@@ -188,7 +233,7 @@ function draw(){
   ctx.fillStyle=ground;
   ctx.fillRect(0,GROUND_Y,canvas.width,canvas.height-GROUND_Y);
 
-  // obstacles (flowers only)
+  // flowers
   for(const o of obstacles){
     drawFlower(o.x+o.size/2,o.y,o.size,o.color);
   }
@@ -222,7 +267,15 @@ function drawFlower(x,y,size,color){
   ctx.moveTo(x,y);
   ctx.lineTo(x,y-size);
   ctx.stroke();
-  // petals (circle around center)
+  // leaves on stem
+  ctx.fillStyle="#2E8B57";
+  ctx.beginPath();
+  ctx.ellipse(x-6,y-size/2,6,3,Math.PI/4,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x+6,y-size/2,6,3,-Math.PI/4,0,Math.PI*2);
+  ctx.fill();
+  // petals
   const petalCount=6;
   const radius=12;
   ctx.fillStyle=color;
@@ -248,4 +301,5 @@ function loop(){
 </script>
 </body>
 </html>
+
 
