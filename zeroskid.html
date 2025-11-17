@@ -4,256 +4,238 @@
   <meta charset="UTF-8">
   <title>ZeroSkid – Wet-Road Detection with AlexNet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
   <style>
+    * {
+      font-family: 'Poppins', sans-serif;
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #ffffff;
+      background: #f4f7fb;
       color: #111827;
-      line-height: 1.6;
+      line-height: 1.7;
     }
+
+    /* HEADER */
     header {
-      background: #1f5fd4;
+      background: linear-gradient(135deg, #1f5fd4, #528df2);
       color: white;
-      padding: 1.8rem 10%;
+      padding: 2.7rem 10%;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
+
     header h1 {
-      margin: 0 0 0.4rem 0;
-      font-size: 2rem;
+      margin: 0 0 0.5rem 0;
+      font-size: 2.4rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
     }
+
     header p {
       margin: 0;
       max-width: 650px;
-      font-size: 0.98rem;
+      font-size: 1.05rem;
+      opacity: 0.95;
     }
+
+    /* NAVIGATION */
     nav {
       background: #153f8f;
-      padding: 0.5rem 10%;
+      padding: 0.7rem 10%;
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
-      font-size: 0.9rem;
+      gap: 1.2rem;
+      font-size: 0.92rem;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
     }
+
     nav a {
       color: #e5f0ff;
       text-decoration: none;
+      font-weight: 500;
+      transition: 0.2s ease;
     }
+
     nav a:hover {
-      text-decoration: underline;
+      color: #ffffff;
+      text-shadow: 0 0 6px rgba(255,255,255,0.6);
     }
+
+    /* MAIN CONTENT */
     main {
-      padding: 1.8rem 10% 2.5rem;
+      padding: 2rem 10% 3rem 10%;
     }
+
     section {
-      margin-bottom: 2rem;
+      margin-bottom: 3rem;
+      background: white;
+      padding: 1.8rem 2rem;
+      border-radius: 14px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+      transition: transform 0.2s ease;
     }
+
+    section:hover {
+      transform: translateY(-4px);
+    }
+
     section h2 {
-      margin-bottom: 0.4rem;
-      color: #1f2937;
-      border-bottom: 2px solid #e5e7eb;
-      padding-bottom: 0.25rem;
-      font-size: 1.25rem;
+      margin-bottom: 0.6rem;
+      color: #1a2b48;
+      font-weight: 600;
+      border-bottom: 2px solid #e3e7ee;
+      padding-bottom: 0.35rem;
     }
+
     h3 {
-      margin-top: 1rem;
-      margin-bottom: 0.3rem;
-      font-size: 1.05rem;
+      margin-top: 1.2rem;
+      margin-bottom: 0.4rem;
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: #1f3d7a;
     }
+
     ul {
       padding-left: 1.2rem;
-      margin-top: 0.2rem;
+      margin-top: 0.3rem;
     }
-    .stats {
-      font-size: 0.95rem;
-      margin-top: 0.4rem;
-    }
-    .code-box {
-      background: #0f172a;
-      color: #e5e7eb;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.8rem;
-      padding: 0.7rem 0.8rem;
-      border-radius: 4px;
-      overflow-x: auto;
-      margin-top: 0.4rem;
-    }
+
+    /* DIAGRAMS */
     .images-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 0.6rem;
+      gap: 1.2rem;
+      margin-top: 1rem;
     }
+
     .images-row img {
       max-width: 100%;
       height: auto;
-      border: 1px solid #e5e7eb;
-      border-radius: 4px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
+
+    /* CODE BOX */
+    .code-box {
+      background: #0f172a;
+      color: #e5e7eb;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      margin-top: 0.6rem;
+      overflow-x: auto;
+    }
+
+    /* FOOTER */
     footer {
-      border-top: 1px solid #e5e7eb;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: #6b7280;
-      padding: 0.8rem 10% 1.2rem;
+      padding: 1rem 10% 2rem;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 2rem;
     }
+
     @media (max-width: 800px) {
       header, nav, main, footer {
         padding-left: 1.2rem;
         padding-right: 1.2rem;
       }
     }
+
   </style>
 </head>
+
 <body>
+
   <header>
     <h1>ZeroSkid: Wet-Road Detection with AlexNet</h1>
     <p>
-      ZeroSkid is an assistive driving system that uses computer vision and deep learning to detect wet pavement
-      in real time. Wet roads cause thousands of preventable crashes every year. The goal of this project is to
-      warn drivers before traction is lost.
+      ZeroSkid is an assistive driving system that uses computer vision and deep learning
+      to detect wet pavement in real time. Wet roads cause thousands of preventable crashes
+      every year. This project warns drivers before traction is lost.
     </p>
   </header>
 
   <nav>
-    <a href="#problem">Problem & Motivation</a>
-    <a href="#solution">Solution & Device</a>
-    <a href="#technical">Technical Approach</a>
-    <a href="#training">Training & Data</a>
+    <a href="#problem">Problem</a>
+    <a href="#solution">Solution</a>
+    <a href="#technical">Technical</a>
+    <a href="#training">Training</a>
     <a href="#results">Visualizations</a>
     <a href="#takeaways">Takeaways</a>
   </nav>
 
   <main>
+
     <section id="problem">
       <h2>Problem & Motivation</h2>
       <p>
-        Wet pavement is a serious but often overlooked hazard. It contributes to a large number of crashes each year,
-        along with major financial and emotional costs.
+        Wet pavement is a serious but often overlooked hazard. It contributes to hundreds of thousands
+        of crashes each year and leads to major financial and emotional costs.
       </p>
       <ul>
-        <li>Current systems like ABS and traction control only react after a skid has started.</li>
-        <li>Drivers can’t always see thin layers of water, puddles, or slick surfaces, especially at night.</li>
-        <li>There is a clear need for proactive, real-time detection of wet-road conditions.</li>
+        <li>ABS and traction control only react after a skid starts.</li>
+        <li>Drivers can’t always see thin water layers or puddles, especially at night.</li>
+        <li>We need proactive, real-time detection — not reactive correction.</li>
       </ul>
-      <p class="stats">
-        Crash statistics commonly report:<br>
-        &bull; Hundreds of thousands of wet-road crashes per year<br>
-        &bull; Over five hundred thousand injuries annually<br>
-        &bull; Thousands of deaths that could be reduced with better warnings
-      </p>
-      <p>
-        This project is motivated by the idea that AI and computer vision can help close the gap between what cars detect
-        and what drivers can safely respond to in time.
-      </p>
     </section>
 
     <section id="solution">
-      <h2>ZeroSkid Device & Solution Overview</h2>
+      <h2>ZeroSkid Solution</h2>
       <p>
-        ZeroSkid proposes a small add-on device that uses a dash-mounted camera and an onboard deep learning model
-        to classify the road ahead as dry or wet.
+        ZeroSkid uses a dash-mounted camera and an embedded deep learning model to classify road
+        conditions in real time.
       </p>
-      <h3>Core Ideas</h3>
       <ul>
-        <li>Camera-based sensing of the lane ahead.</li>
-        <li>Real-time classification of road conditions (wet vs. dry).</li>
-        <li>Audio or visual alerts when wet pavement is detected.</li>
-      </ul>
-      <h3>Who Could Benefit</h3>
-      <ul>
-        <li>Everyday drivers in rain-heavy regions (for example, Florida).</li>
-        <li>Insurance partners trying to reduce crash risk.</li>
-        <li>Fleet and delivery operators who want fewer accidents and less downtime.</li>
+        <li>Camera-based sensing</li>
+        <li>Wet vs. dry road classification</li>
+        <li>Instant alerts for drivers</li>
       </ul>
     </section>
 
     <section id="technical">
-      <h2>Technical Approach: Using AlexNet</h2>
+      <h2>Technical Approach: AlexNet</h2>
       <p>
-        ZeroSkid uses AlexNet, a deep convolutional neural network (CNN), to classify images of the road as wet or dry.
-        AlexNet is well-suited to this task because its convolutional layers can learn visual patterns like texture,
-        reflections, and edges on the pavement.
+        AlexNet is a deep convolutional neural network that learns textures, reflections, and patterns
+        that appear on wet pavement.
       </p>
+
       <h3>Architecture Summary</h3>
       <ul>
-        <li>5 convolutional layers for feature extraction.</li>
-        <li>3 fully connected layers for final classification.</li>
-        <li>ReLU activations and max pooling to improve learning and reduce noise.</li>
-        <li>Softmax output layer for predicting wet vs. dry.</li>
+        <li>5 convolutional layers</li>
+        <li>3 fully connected layers</li>
+        <li>ReLU activations & max pooling</li>
+        <li>Softmax output for wet/dry classification</li>
       </ul>
-      <h3>How It Helps</h3>
-      <p>
-        Early convolutional layers focus on edges and simple patterns; deeper layers pick up more complex textures
-        and reflections. This layered processing helps the network distinguish between normal dry pavement and
-        the shinier, more reflective look of wet roads.
-      </p>
     </section>
 
     <section id="training">
-      <h2>Training Process & Data</h2>
-      <p>
-        The model is trained on labeled images of roads under wet and dry conditions. During training, AlexNet learns
-        to connect visual patterns in the images with the correct label.
-      </p>
+      <h2>Training & Data</h2>
       <h3>Training Setup</h3>
       <div class="code-box">
-        Input data: Wet &amp; dry road images<br>
-        Loss function: Cross-entropy loss<br>
+        Input: Wet & dry road images<br>
+        Loss: Cross-entropy<br>
         Optimizer: SGD or Adam<br>
-        Learning rate: ~0.001<br>
+        LR: 0.001<br>
         Batch size: 32<br>
-        Epochs: 10–30 (depending on dataset size)
+        Epochs: 10–30
       </div>
-      <h3>Data & Preprocessing</h3>
+
+      <h3>Preprocessing</h3>
       <ul>
-        <li>Images from different times of day and weather conditions.</li>
-        <li>Mix of highways, city streets, and parking lots.</li>
-        <li>All images resized to 224×224×3 RGB to match AlexNet.</li>
-        <li>Pixel values normalized for more stable training.</li>
-        <li>Data augmentation (brightness changes, rotations, flips) to improve generalization.</li>
+        <li>Resize to 224×224×3 (AlexNet standard)</li>
+        <li>Normalize pixel values</li>
+        <li>Brightness/rotation/flip augmentation</li>
       </ul>
-    </section>
+    </sectio
 
-    <section id="results">
-      <h2>Visualizations & System Diagrams</h2>
-      <p>
-        The diagrams below summarize the main parts of the ZeroSkid system and training process. Screenshots from
-        Colab (such as accuracy curves or example predictions) can also be added in this section.
-      </p>
-      <div class="images-row">
-        <div>
-          <h3>ZeroSkid System Pipeline</h3>
-          <img src="zeroskid_pipeline_pretty.png" alt="ZeroSkid system pipeline diagram">
-        </div>
-        <div>
-          <h3>Training Pipeline</h3>
-          <img src="training_pipeline_pretty.png" alt="Training pipeline diagram">
-        </div>
-      </div>
-      <p>
-        Additional plots (for example, training accuracy over epochs or confusion matrices) can be exported from
-        Colab and included here as static images.
-      </p>
-    </section>
-
-    <section id="takeaways">
-      <h2>Takeaways</h2>
-      <ul>
-        <li>Wet roads are a major source of preventable crashes and injuries.</li>
-        <li>AlexNet can learn visual patterns that help detect wet pavement from camera images.</li>
-        <li>ZeroSkid shows how deep learning can be used for real-time, proactive driver assistance.</li>
-        <li>Future work could explore nighttime performance, black ice detection, and deployment on embedded hardware.</li>
-      </ul>
-      <p>
-        Overall, this project connects a real-world safety problem with a practical computer vision solution,
-        using a well-known neural network architecture.
-      </p>
-    </section>
-  </main>
-
-  <footer>
-    ZeroSkid &middot; Course Project &middot; Hosted with GitHub Pages
-  </footer>
-</body>
-</html>
 
