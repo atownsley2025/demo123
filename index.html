@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZeroSkid – Wet-Road Detection with AlexNet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #122031;
+    }
+    header {
+      background: linear-gradient(135deg, #1f5fd4, #60a5fa);
+      color: white;
+      padding: 2.5rem 10%;
+    }
+    nav {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1.5rem;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    nav a {
+      color: #e5f0ff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .hero-title {
+      font-size: 2.4rem;
+      margin: 0 0 0.5rem 0;
+    }
+    .hero-sub {
+      font-size: 1.05rem;
+      max-width: 650px;
+      line-height: 1.5;
+    }
+    main {
+      padding: 2.5rem 10% 3rem 10%;
+    }
+    section {
+      margin-bottom: 3rem;
+      background: white;
+      padding: 1.8rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    }
+    section h2 {
+      margin-top: 0;
+      color: #1f4172;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 1.5rem;
+    }
+    ul {
+      margin-top: 0.4rem;
+    }
+    .pill {
+      display: inline-block;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #e0ecff;
+      color: #1f5fd4;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+    }
+    .stat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      margin-top: 0.75rem;
+    }
+    .stat {
+      background: #f2f5ff;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      min-width: 150px;
+    }
+    .stat strong {
+      display: block;
+      font-size: 1rem;
+      color: #143a7b;
+    }
+    .diagram-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+    .diagram-card {
+      flex: 1 1 260px;
+      background: #f3f6ff;
+      border-radius: 10px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .diagram-card img {
+      max-width: 100%;
+      border-radius: 6px;
+    }
+    .code-box {
+      background: #0f172a;
+      color: #e5e7eb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.82rem;
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+      padding: 1rem 10% 2rem;
+    }
+    @media (max-width: 800px) {
+      header {
+        padding: 1.8rem 1.2rem;
+      }
+      main {
+        padding: 1.5rem 1.2rem 2.2rem;
+      }
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+      nav {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="#problem">Problem</a>
+      <a href="#solution">Solution & Market</a>
+      <a href="#technical">Technical Approach</a>
+      <a href="#training">Training & Data</a>
+      <a href="#results">Visualizations</a>
+      <a href="#takeaways">Takeaways</a>
+    </nav>
+    <h1 class="hero-title">ZeroSkid: Driving Toward a Safer Future</h1>
+    <p class="hero-sub">
+      ZeroSkid is an assistive driving device that uses computer vision and deep learning (AlexNet/CNNs)
+      to detect wet-road conditions in real time. Wet pavement is a silent hazard that causes hundreds of
+      thousands of preventable crashes every year. Our goal is to warn drivers <strong>before</strong> a skid happens.
+    </p>
+  </header>
+
+  <main>
+    <!-- PART 1: PROBLEM OVERVIEW -->
+
+    <section id="problem">
+      <div class="pill">Part 1 — Problem Overview</div>
+      <h2>The Critical Problem: Wet Pavement as a Hidden Threat</h2>
+      <div class="two-col">
+        <div>
+          <p>
+            Wet pavement is a quiet but serious hazard. It contributes to a staggering number of incidents each year,
+            many of which could be prevented with earlier warnings.
+          </p>
+          <ul>
+            <li>Current vehicle safety systems like ABS and traction control only react <em>after</em> a skid has begun.</li>
+            <li>Drivers can’t always see thin layers of water, puddles, or slick surfaces—especially at night.</li>
+            <li>There is a gap between what the car senses and what the driver can safely react to in time.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="stat-row">
+            <div class="stat">
+              <strong>$340B+</strong>
+              <span>Annual crash-related costs in the U.S.</span>
+            </div>
+            <div class="stat">
+              <strong>500k+ Injuries</strong>
+              <span>From wet-road incidents every year</span>
+            </div>
+            <div class="stat">
+              <strong>5,700 Deaths</strong>
+              <span>Tragic losses that could be reduced with early intervention</span>
+            </div>
+          </div>
+          <p style="margin-top:1rem;">
+            Medical bills, insurance payouts, and lost productivity all add up. The human cost is even greater.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="solution">
+      <div class="pill">Part 1 — Solution & Motivation</div>
+      <h2>ZeroSkid: A Proactive Wet-Road Safety System</h2>
+      <div class="two-col">
+        <div>
+          <p>
+            ZeroSkid is designing a camera-based assistive driving device that leverages computer vision and deep learning
+            to classify road conditions in real time. Instead of reacting after a skid, ZeroSkid provides proactive alerts.
+          </p>
+          <h3>Our Mission</h3>
+          <ul>
+            <li>Reduce crashes on wet pavement</li>
+            <li>Save lives and protect families</li>
+            <li>Cut economic costs for drivers, fleets, and insurers</li>
+            <li>Show how AI can deliver meaningful social benefits</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Why Existing Systems Fall Short</h3>
+          <ul>
+            <li><strong>ABS &amp; Traction Control</strong> only activate once wheels have already started to slip.</li>
+            <li>No built-in system actively detects puddles or thin water layers on the road surface.</li>
+            <li>Human vision is limited in rain, glare, and low-light conditions.</li>
+          </ul>
+          <p>
+            This creates a clear opportunity: use AI and computer vision to sense and predict dangerous road conditions
+            <strong>before</strong> the driver loses control.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="pill">Part 1 — Solution & Market</div>
+      <h2>Our Solution at a Glance & Market Opportunity</h2>
+      <div class="two-col">
+        <div>
+          <h3>ZeroSkid Device</h3>
+          <ul>
+            <li><strong>Camera-Based Detection:</strong> Dash-mounted camera with an embedded GPU (e.g., Jetson Nano) analyzes road imagery.</li>
+            <li><strong>Real-Time Alerts:</strong> Audio and visual warnings when wet pavement or hydroplaning risk is detected.</li>
+            <li><strong>Low-Cost Hardware:</strong> Designed to be affordable and easy to install in existing vehicles.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Market & Business Model</h3>
+          <ul>
+            <li>Drivers in rain-heavy regions (e.g., Florida) with immediate need for better safety.</li>
+            <li>Insurance companies seeking to reduce payouts and offer safer driver programs.</li>
+            <li>Fleet operators, delivery services, and rideshare companies needing fewer accidents and less downtime.</li>
+            <li>Revenue through device sales, fleet subscriptions, and insurance data partnerships.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 2: TECHNICAL SOLUTION -->
+
+    <section id="technical">
+      <div class="pill">Part 2 — Technical Solution</div>
+      <h2>Technical Approach: Using AlexNet for Wet-Road Detection</h2>
+      <div class="two-col">
+        <div>
+          <p>
+            At the core of ZeroSkid is AlexNet, a deep convolutional neural network (CNN) known for its strong image classification performance.
+            AlexNet’s layered design makes it ideal for learning the subtle visual cues of wet pavement.
+          </p>
+          <p>
+            Its convolutional layers can detect textures, shine, and edges—exactly the kinds of patterns that distinguish dry asphalt
+            from slick, reflective surfaces after rain.
+          </p>
+          <h3>Architecture Overview</h3>
+          <ul>
+            <li>5 convolutional layers for feature extraction</li>
+            <li>3 fully connected layers for classification</li>
+            <li>ReLU activations and max pooling to improve learning and reduce noise</li>
+            <li>Softmax output to predict wet vs. dry road classes</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Layer-by-Layer Detection</h3>
+          <ul>
+            <li><strong>Convolutional Layers:</strong> Extract edges, patterns, reflections, and textures from road images.</li>
+            <li><strong>ReLU Activation:</strong> Adds non-linearity so the model can learn more complex relationships.</li>
+            <li><strong>Pooling Layers:</strong> Downsample feature maps, making the model more efficient and robust to small variations.</li>
+            <li><strong>Fully Connected Layers:</strong> Combine all learned features to make the final wet/dry decision.</li>
+          </ul>
+          <p>
+            Together, these layers let ZeroSkid reliably classify whether a lane ahead is safe or dangerously slick.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="training">
+      <div class="pill">Part 2 — Training & Data</div>
+      <h2>ZeroSkid Training: Data, Process, and Preprocessing</h2>
+      <div class="two-col">
+        <div>
+          <h3>Training Process</h3>
+          <div class="code-box">
+            Input data: Wet &amp; dry road images<br>
+            Loss function: Cross-entropy loss<br>
+            Optimizer: SGD or Adam<br>
+            Learning rate: ~0.001<br>
+            Batch size: 32<br>
+            Epochs: 10–30 (depending on dataset size)
+          </div>
+          <p style="margin-top:0.7rem;">
+            The model learns by iteratively minimizing cross-entropy loss, adjusting its weights to better match the true
+            labels (wet vs. dry) over many training epochs.
+          </p>
+        </div>
+        <div>
+          <h3>Data Requirements & Preprocessing</h3>
+          <ul>
+            <li>Images of roads under light rain, heavy rain, puddles, and dry conditions.</li>
+            <li>Day and night scenarios, highways, city streets, and parking lots.</li>
+            <li>Input resized to <strong>224×224×3 RGB</strong> to match AlexNet’s expected input size.</li>
+            <li>Pixel values normalized (0–1 or -1 to 1) for stable training.</li>
+            <li>Data augmentation including brightness changes, rotations, and horizontal flips.</li>
+          </ul>
+          <p>
+            These steps help the model generalize to real-world conditions and avoid overfitting to a narrow set of images.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="results">
+      <div class="pill">Visualizations & Results</div>
+      <h2>System and Training Pipelines</h2>
+      <p>
+        The following diagrams summarize the ZeroSkid system pipeline and the training process used to teach AlexNet to recognize
+        wet-road conditions.
+      </p>
+      <div class="diagram-row">
+        <div class="diagram-card">
+          <h3>ZeroSkid System Pipeline</h3>
+          <img src="zeroskid_pipeline_pretty.png" alt="ZeroSkid system pipeline diagram">
+          <p>
+            From camera input to preprocessing, AlexNet inference, and final driver alert, the system is designed for
+            real-time performance.
+          </p>
+        </div>
+        <div class="diagram-card">
+          <h3>Training Process</h3>
+          <img src="training_pipeline_pretty.png" alt="Training pipeline diagram">
+          <p>
+            Training images are augmented, passed through repeated training loops, and optimized to reduce loss
+            and improve classification accuracy.
+          </p>
+        </div>
+      </div>
+      <p style="margin-top:1rem;">
+        Additional plots from Colab (such as accuracy curves or example predictions) can be added here as screenshots
+        to further document performance.
+      </p>
+    </section>
+
+    <section id="takeaways">
+      <div class="pill">Takeaways</div>
+      <h2>Key Takeaways and Future Work</h2>
+      <ul>
+        <li>Wet roads are a major but addressable cause of avoidable crashes.</li>
+        <li>AlexNet provides fast, accurate detection of wet pavement textures and reflections.</li>
+        <li>ZeroSkid shows how deep learning can support real-time, proactive accident prevention.</li>
+        <li>Future directions include nighttime performance, black ice detection, and deployment on embedded devices.</li>
+      </ul>
+      <p>
+        Overall, ZeroSkid moves road safety from reactive systems toward smarter, predictive assistance that can help
+        drivers stay safe in challenging weather.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    ZeroSkid &middot; Course Project &middot; Hosted with GitHub Pages
+  </footer>
+</body>
+</html>
