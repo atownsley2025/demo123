@@ -1,255 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>ZeroSkid</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>ZeroSkid – Tools & Tech</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<style>
-  * {
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    scroll-behavior: smooth;
-  }
-
-  body {
-    background: #f5f7fb;
-    color: #111827;
-    line-height: 1.6;
-  }
-
-  /* STICKY HEADER */
-  header {
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: white;
-    padding: 1rem 8%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: all 0.35s ease;
-    z-index: 1000;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  }
-
-  header.shrink {
-    padding: 0.4rem 8%;
-    background: #ffffffdd;
-    backdrop-filter: blur(6px);
-  }
-
-  header img.logo-small {
-    height: 45px;
-    transition: height 0.3s;
-  }
-
-  header.shrink img.logo-small {
-    height: 32px;
-  }
-
-  nav a {
-    margin-left: 1.2rem;
-    text-decoration: none;
-    color: #1a2b48;
-    font-weight: 500;
-    transition: 0.2s ease;
-  }
-
-  nav a:hover {
-    color: #2563eb;
-  }
-
-  /* HOME SECTION */
-  section {
-    padding: 100px 10% 120px;
-  }
-
-  #home {
-    text-align: center;
-    padding-top: 160px;
-  }
-
-  #home img {
-    height: 160px;
-    margin-bottom: 1rem;
-    filter: drop-shadow(0px 0px 14px rgba(0,123,255,0.35));
-    transition: 0.3s ease;
-  }
-
-  #home h1 {
-    font-size: 2.8rem;
-    font-weight: 600;
-    letter-spacing: -1px;
-    margin-bottom: 1rem;
-  }
-
-  #home p {
-    max-width: 650px;
-    margin: 0 auto;
-    font-size: 1rem;
-    opacity: 0.85;
-  }
-
-  /* SECTION TITLES */
-  h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.6rem;
-    font-weight: 600;
-    color: #1f3d7a;
-  }
-
-  p, ul {
-    font-size: 1rem;
-    opacity: 0.88;
-    max-width: 800px;
-  }
-
-  ul {
-    margin-top: 0.6rem;
-    padding-left: 1.2rem;
-  }
-
-  /* ABOUT */
-  .about-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 14px;
-    max-width: 800px;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.06);
-  }
-
-  /* CONTACT FORM */
-  #contact input, #contact textarea {
-    width: 100%;
-    padding: 0.8rem;
-    margin: 0.6rem 0;
-    border: 1px solid #d0d7e2;
-    border-radius: 8px;
-    font-size: 1rem;
-  }
-
-  #contact button {
-    background: #1f5fd4;
-    color: white;
-    padding: 0.7rem 1.4rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: 0.2s;
-  }
-
-  #contact button:hover {
-    background: #0d47b5;
-  }
-
-</style>
-</head>
-<body>
-
-<!-- HEADER (Shrinks on Scroll) -->
-<header id="header">
-  <div style="display:flex; align-items:center;">
-    <img src="logo.png" class="logo-small">
-  </div>
-
-  <nav>
-    <a href="#home">Home</a>
-    <a href="#problem">Problem & Solution</a>
-    <a href="#tools">Tools & Tech</a>
-    <a href="#data">Data & Training</a>
-    <a href="#about">Creator</a>
-    <a href="#contact">Contact</a>
-  </nav>
-</header>
-
-<!-- HOME SECTION -->
-<section id="home">
-  <img src="logo.png" alt="ZeroSkid Logo">
-  <h1>ZeroSkid</h1>
-  <p>
-    Using AI and computer vision to detect wet roads in real-time and prevent accidents before they happen.
-  </p>
-</section>
-
-<!-- PROBLEM & SOLUTION -->
-<section id="problem">
-  <h2>Problem & Solution</h2>
-  <p>
-    Wet pavement causes thousands of preventable crashes every year. Most vehicle systems react *after* a skid begins.
-    ZeroSkid aims to fix this with proactive detection using deep learning.
-  </p>
-  <ul>
-    <li>Detects slippery road conditions instantly</li>
-    <li>Warns drivers before traction loss</li>
-    <li>Affordable dash-mounted AI system</li>
-  </ul>
-</section>
-
-<!-- TOOLS & TECH -->
-<section id="tools">
-  <h2>Tools & Tech</h2>
-  <p>This project uses AlexNet, computer vision, and embedded hardware.</p>
-  <ul>
-    <li>Python</li>
-    <li>PyTorch / TensorFlow</li>
-    <li>AlexNet CNN architecture</li>
-    <li>Image preprocessing + augmentation</li>
-  </ul>
-</section>
-
-<!-- DATA & TRAINING -->
-<section id="data">
-  <h2>Data, Training & Results</h2>
-  <p>Model trained on wet vs dry road images with augmentation.</p>
-  <ul>
-    <li>Learning rate: 0.001</li>
-    <li>Batch size: 32</li>
-    <li>Loss: Cross-entropy</li>
-  </ul>
-</section>
-
-<!-- CREATOR -->
-<section id="about">
-  <h2>Creator</h2>
-  <div class="about-card">
-    <p>
-      Hi! I’m the creator of ZeroSkid. I designed this project to explore how deep learning can prevent wet-road accidents.
-    </p>
-  </div>
-</section>
-
-<!-- CONTACT -->
-<section id="contact">
-  <h2>Contact</h2>
-  <p>Get in touch with me using the form below.</p>
-
-  <input type="text" placeholder="Your name">
-  <input type="email" placeholder="Email address">
-  <textarea rows="5" placeholder="Your message"></textarea>
-
-  <button>Send</button>
-</section>
-
-<script>
-  // Shrinking Header Effect
-  const header = document.getElementById("header");
-
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > 80) {
-      header.classList.add("shrink");
-    } else {
-      header.classList.remove("shrink");
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      scroll-behavior: smooth;
     }
-  });
-</script>
+    body.subpage {
+      margin: 0;
+      background: #0b1020;
+      color: #e5e7eb;
+    }
+    a { text-decoration: none; }
+
+    /* same header as home */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(10, 16, 35, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 0.6rem 8%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .header-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      object-fit: contain;
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.7);
+    }
+    .site-title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e5f0ff;
+    }
+    nav {
+      display: flex;
+      gap: 1.4rem;
+      font-size: 0.9rem;
+    }
+    nav a {
+      color: #cbd5f5;
+      opacity: 0.9;
+      transition: 0.2s ease;
+    }
+    nav a:hover {
+      color: #ffffff;
+      opacity: 1;
+      text-shadow: 0 0 8px rgba(96, 165, 250, 0.9);
+    }
+
+    main {
+      padding: 2.2rem 8% 3.4rem;
+    }
+    section {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 16px;
+      padding: 1.7rem 1.9rem;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      margin-bottom: 2rem;
+    }
+    section h2 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      font-size: 1.4rem;
+      color: #e5f0ff;
+    }
+    h3 {
+      margin-top: 1.1rem;
+      margin-bottom: 0.35rem;
+      font-size: 1.1rem;
+      color: #bfdbfe;
+    }
+    ul {
+      padding-left: 1.1rem;
+      font-size: 0.95rem;
+    }
+    p {
+      font-size: 0.95rem;
+    }
+
+    .code-box {
+      background: #020617;
+      color: #e5e7eb;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      padding: 0.8rem 0.9rem;
+      border-radius: 8px;
+      margin-top: 0.4rem;
+      overflow-x: auto;
+    }
+
+    .images-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.8rem;
+    }
+    .images-row img {
+      max-width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+    }
+
+    @media (max-width: 900px) {
+      header, main {
+        padding-left: 1.2rem;
+        padding-right: 1.2rem;
+      }
+    }
+  </style>
+</head>
+
+<body class="subpage">
+
+  <header>
+    <div class="header-left">
+      <img src="zeroskid-logo.png" alt="ZeroSkid logo" class="header-logo">
+      <div class="site-title">ZeroSkid</div>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="tech.html">Tools & Tech</a>
+      <a href="data.html">Data & Results</a>
+      <a href="about.html">Creator</a>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <h2>Tools & Technical Approach</h2>
+      <p>
+        Here you’ll describe AlexNet, how the architecture works, and what tools you’re using
+        (Python, PyTorch / TensorFlow, Google Colab, etc.).
+      </p>
+
+      <h3>AlexNet Overview</h3>
+      <ul>
+        <li>Deep convolutional neural network for image classification.</li>
+        <li>5 convolutional layers and 3 fully connected layers.</li>
+        <li>Great at learning textures, reflections, and patterns on wet pavement.</li>
+      </ul>
+
+      <h3>Training Setup</h3>
+      <div class="code-box">
+        Input images: Wet + dry road images<br>
+        Loss: Cross-entropy<br>
+        Optimizer: SGD or Adam<br>
+        Learning rate: 0.001<br>
+        Batch size: 32<br>
+        Epochs: 10–30
+      </div>
+    </section>
+
+    <!-- you can add more <section> blocks here for extra detail if you want -->
+  </main>
 
 </body>
 </html>
+
