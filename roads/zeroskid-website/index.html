@@ -1,79 +1,90 @@
-# ZeroSkid – Wet vs. Dry Road Classifier
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZeroSkid – Wet vs Dry Road Detection</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">ZeroSkid</div>
+    <nav>
+      <a href="index.html" class="active">Problem & Motivation</a>
+      <a href="technical.html">Technical Approach</a>
+    </nav>
+  </header>
 
-## Problem & Motivation
-Hydroplaning accidents happen fast and often because drivers can't always tell how wet a road really is.  
-My goal with ZeroSkid is to build a simple AI model that can classify road conditions as *wet* or *dry* so drivers and vehicle systems can react early.
+  <main class="container">
+    <section class="hero">
+      <h1>ZeroSkid: Detecting Wet Roads with Deep Learning</h1>
+      <p>
+        ZeroSkid is a proof-of-concept project that uses computer vision to tell whether a road
+        surface is <strong>wet</strong> or <strong>dry</strong>. The idea connects to a larger safety
+        concept: if a car can recognize dangerous wet conditions in real time, it can warn the driver
+        or adjust driving behavior to reduce the chance of hydroplaning.
+      </p>
+    </section>
 
-## Dataset Description
-I created my own dataset of wet and dry road images.  
-The images came from online sources and were organized into two folders:
-- `wet/`
-- `dry/`
+    <section class="card">
+      <h2>The Problem</h2>
+      <p>
+        Wet roads are a big safety issue, especially when drivers do not realize how slippery the
+        surface actually is. Many crashes happen because the road looks “normal” until a car hits a
+        slick patch of water and loses traction. Most current systems focus on speed or distance to
+        other cars, but do not really look at the <em>road surface itself</em>.
+      </p>
+      <p>
+        My project focuses on a simpler but important sub-problem: can we train a model to visually
+        tell the difference between a wet road and a dry road using images?
+      </p>
+    </section>
 
-All images were resized to 224×224 and normalized for AlexNet.
+    <section class="card">
+      <h2>Motivation</h2>
+      <p>
+        The motivation behind ZeroSkid is to explore how AI could help prevent accidents before they
+        happen. If a model can recognize wet conditions from a camera feed, it could be part of a
+        system that:
+      </p>
+      <ul>
+        <li>Warns the driver when the road is potentially unsafe</li>
+        <li>Adjusts cruise control or braking behavior on wet surfaces</li>
+        <li>Helps insurance and safety systems better understand driving conditions</li>
+      </ul>
+      <p>
+        This project is not a full product yet. It is a small, controlled version of the idea that
+        focuses on image classification as a first step toward smarter road-condition awareness.
+      </p>
+    </section>
 
-Because my dataset is small, this project focuses on testing how well AlexNet can learn from limited data and how different settings affect performance.
+    <section class="card">
+      <h2>Dataset Overview</h2>
+      <p>
+        For this project, I created a custom dataset with two classes: <strong>wet</strong> and
+        <strong>dry</strong> roads. Each image shows a road surface and is labeled based on its
+        condition. The images are stored in folders like <code>train/wet</code>, <code>train/dry</code>,
+        <code>test/wet</code>, and <code>test/dry</code>. All images are resized to 224×224 pixels and
+        normalized so they can be used with AlexNet.
+      </p>
+      <p>
+        The dataset is fairly small, which makes training a bit noisy, but it is realistic for a
+        student project and still gives the model enough information to learn meaningful patterns
+        between wet and dry road surfaces.
+      </p>
+    </section>
 
-## Technical Approach (AlexNet)
-I used PyTorch in Google Colab and implemented a modified AlexNet model trained on my custom dataset.
+    <section class="card">
+      <h2>How This Website Is Organized</h2>
+      <p>
+        This page explains the problem and motivation behind ZeroSkid. The
+        <a href="technical.html">Technical Approach</a> page goes into more detail about the model,
+        experiments, visualizations, and results from training AlexNet and ResNet18 on the wet vs dry dataset.
+      </p>
+    </section>
+  </main>
 
-The process included:
-- Loading data from Google Drive
-- Random horizontal flips for augmentation
-- Normalization for AlexNet
-- Training for 20+ epochs
-- Running multiple experiments:
-  - different batch sizes  
-  - different learning rates  
-  - with vs. without augmentation  
-  - AlexNet vs. ResNet18  
-
-All experiments were logged using Weights & Biases.
-
----
-
-# 🧪 Experiments & Results
-
-## Experiment 1 – Baseline
-This experiment used:
-- Batch size 16  
-- Learning rate 0.001  
-- No augmentation  
-
-### Accuracy
-![Experiment 1 Accuracy](images/exp1_accuracy.png)
-
-### Loss
-![Experiment 1 Loss](images/exp1_loss.png)
-
----
-
-## Experiment 3 – Best Performance
-This experiment performed the best.  
-It used:
-- Learning rate 0.0001  
-- Augmentation turned on  
-
-### Accuracy
-![Experiment 3 Accuracy](images/exp3_accuracy.png)
-
-### Loss
-![Experiment 3 Loss](images/exp3_loss.png)
-
----
-
-# 🔍 Confusion Matrix
-This shows how well the model classified wet vs. dry images.
-
-![Confusion Matrix](images/confusion_matrix.png)
-
-The model is extremely strong at recognizing **wet** roads but sometimes confuses dry roads as wet.  
-For safety applications, false-wet predictions are better than false-dry.
-
----
-
-# 📌 Key Takeaways
-- AlexNet can learn wet vs. dry road features even with a small dataset.  
-- Data augmentation improves performance significantly.  
-- ResNet18 performed slightly better than AlexNet.  
-- The model is biased toward predicting "wet," which is safer for driver alerts.
+  <footer class="site-footer">
+    <p>ZeroSkid – Wet vs Dry Road Detection • 2025</p>
+  </footer>
+</body>
+</html>
