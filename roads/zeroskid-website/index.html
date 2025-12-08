@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZeroSkid – Wet vs Dry Road Detection</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">ZeroSkid</div>
+    <nav>
+      <a href="index.html" class="active">Problem & Motivation</a>
+      <a href="technical.html">Technical Approach</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>ZeroSkid: Detecting Wet Roads with Deep Learning</h1>
+      <p>
+        ZeroSkid is a proof-of-concept project that uses computer vision to tell whether a road
+        surface is <strong>wet</strong> or <strong>dry</strong>. The idea connects to a larger safety
+        concept: if a car can recognize dangerous wet conditions in real time, it can warn the driver
+        or adjust driving behavior to reduce the chance of hydroplaning.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>The Problem</h2>
+      <p>
+        Wet roads are a big safety issue, especially when drivers do not realize how slippery the
+        surface actually is. Many crashes happen because the road looks “normal” until a car hits a
+        slick patch of water and loses traction. Most current systems focus on speed or distance to
+        other cars, but do not really look at the <em>road surface itself</em>.
+      </p>
+      <p>
+        My project focuses on a simpler but important sub-problem: can we train a model to visually
+        tell the difference between a wet road and a dry road using images?
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Motivation</h2>
+      <p>
+        The motivation behind ZeroSkid is to explore how AI could help prevent accidents before they
+        happen. If a model can recognize wet conditions from a camera feed, it could be part of a
+        system that:
+      </p>
+      <ul>
+        <li>Warns the driver when the road is potentially unsafe</li>
+        <li>Adjusts cruise control or braking behavior on wet surfaces</li>
+        <li>Helps insurance and safety systems better understand driving conditions</li>
+      </ul>
+      <p>
+        This project is not a full product yet. It is a small, controlled version of the idea that
+        focuses on image classification as a first step toward smarter road-condition awareness.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Dataset Overview</h2>
+      <p>
+        For this project, I created a custom dataset with two classes: <strong>wet</strong> and
+        <strong>dry</strong> roads. Each image shows a road surface and is labeled based on its
+        condition. The images are stored in folders like <code>train/wet</code>, <code>train/dry</code>,
+        <code>test/wet</code>, and <code>test/dry</code>. All images are resized to 224×224 pixels and
+        normalized so they can be used with AlexNet.
+      </p>
+      <p>
+        The dataset is fairly small, which makes training a bit noisy, but it is realistic for a
+        student project and still gives the model enough information to learn meaningful patterns
+        between wet and dry road surfaces.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>How This Website Is Organized</h2>
+      <p>
+        This page explains the problem and motivation. The
+        <a href="technical.html">Technical Approach</a> page goes into more detail about the model,
+        experiments, and results using AlexNet and ResNet18.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>ZeroSkid – Wet vs Dry Road Detection • 2025</p>
+  </footer>
+</body>
+</html>
 
