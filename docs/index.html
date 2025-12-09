@@ -9,157 +9,81 @@
   <header class="site-header">
     <div class="logo">ZeroSkid</div>
     <nav>
-      <a href="#problem" class="active">Problem</a>
-      <a href="#technical">Technical</a>
-      <a href="#experiments">Experiments</a>
-      <a href="#takeaways">Takeaways</a>
+      <a href="index.html" class="active">Problem</a>
+      <a href="technical.html">Technical Approach</a>
     </nav>
   </header>
 
   <main class="container">
-    <!-- Hero / Intro -->
     <section class="hero">
       <h1>ZeroSkid: Wet vs Dry Road Classifier</h1>
       <p>
         ZeroSkid is my deep learning project where I trained a model to tell if a road surface is 
         <strong>wet</strong> or <strong>dry</strong> from images. The goal is to explore how computer vision 
-        could help warn drivers about unsafe road conditions before they actually lose control.
+        could help warn drivers about unsafe road conditions before drivers actually lose control.
       </p>
     </section>
 
-    <!-- Problem & Motivation -->
     <section class="card" id="problem">
-      <h2>🚗 Problem & Motivation</h2>
+      <h2>🚗 Problem</h2>
       <p>
-        Hydroplaning can happen really fast, especially when the road looks “fine” but is actually very slick.
-        Drivers usually only realize how bad it is once they’re already losing traction. Most driver-assist
-        systems focus on other cars or lane lines, not the actual road surface.
+        Hydroplaning happens fast, especially when the road looks “normal” but is actually slick. A lot of the time,
+        drivers only realize how bad the road is once they are already sliding. Most driver-assist systems focus on
+        other cars, lanes, or speed – not on the texture or condition of the road surface itself.
       </p>
       <p>
-        My idea with ZeroSkid is to start small: can a model look at an image of the road and figure out if it's
-        wet or dry? If that works, it could eventually be part of a bigger safety system that:
+        The smaller question I wanted to test was simple: <strong>can a model look at an image of the road and decide if it’s wet or dry?</strong>
+        If that works, it could eventually be built into a safety system that reacts earlier than a human would.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>💡 Motivation</h2>
+      <p>
+        I’ve always been interested in the idea of using AI for safety instead of just for convenience. Wet roads are
+        a really common problem, but drivers don’t always adjust their behavior until it’s too late. If a car’s camera
+        could recognize a dangerous surface, it could:
       </p>
       <ul>
-        <li>Warns the driver when the road looks dangerous</li>
-        <li>Automatically adjusts things like cruise control or braking on wet roads</li>
-        <li>Helps cars “understand” road conditions instead of just traffic</li>
+        <li>Warn the driver when the road looks risky</li>
+        <li>Adjust things like cruise control or braking on wet roads</li>
+        <li>Help make smarter, condition-aware driving systems</li>
       </ul>
+      <p>
+        ZeroSkid is not a full product, but this project is one realistic step: building and testing a classifier that
+        understands the difference between wet and dry road images.
+      </p>
     </section>
 
-    <!-- Dataset -->
     <section class="card">
-      <h2>📂 Dataset</h2>
+      <h2>📂 Dataset Overview</h2>
       <p>
-        I built a small custom dataset with two labels: <strong>wet</strong> and <strong>dry</strong>. 
+        For this project, I created a small custom dataset with two labels: <strong>wet</strong> and <strong>dry</strong>. 
         The images came from online sources and were organized into folders:
       </p>
       <ul>
-        <li><code>train/wet</code>, <code>train/dry</code></li>
-        <li><code>valid/wet</code>, <code>valid/dry</code></li>
+        <li><code>train/wet</code> and <code>train/dry</code></li>
+        <li><code>valid/wet</code> and <code>valid/dry</code></li>
       </ul>
       <p>
-        Every image was resized to <strong>224×224</strong> pixels and normalized so that it works well with AlexNet.
-        The dataset is pretty small, so part of this project is just seeing how much we can get out of limited data.
+        Every image was resized to <strong>224×224</strong> and normalized so it works with AlexNet. Because the
+        dataset is small, part of the project is just seeing how much performance we can squeeze out of limited data
+        using techniques like transfer learning and data augmentation.
       </p>
     </section>
 
-    <!-- Technical Approach -->
-    <section class="card" id="technical">
-      <h2>🧠 Technical Approach (AlexNet)</h2>
+    <section class="card">
+      <h2>📄 What’s on the Next Page?</h2>
       <p>
-        I used <strong>PyTorch in Google Colab</strong> and fine-tuned an AlexNet model (originally trained on ImageNet)
-        to classify only two classes: wet and dry.
-      </p>
-      <p>The main steps were:</p>
-      <ul>
-        <li>Loading the dataset from Google Drive</li>
-        <li>Resizing images to 224×224 and normalizing with ImageNet mean/std</li>
-        <li>Optional data augmentation (random horizontal flips)</li>
-        <li>Training AlexNet for multiple runs with different hyperparameters</li>
-        <li>Logging everything (loss, accuracy, confusion matrix) to Weights &amp; Biases (wandb)</li>
-      </ul>
-      <p>
-        I also compared AlexNet to <strong>ResNet18</strong> to see how a deeper model behaves on this small dataset.
-      </p>
-    </section>
-
-    <!-- Experiments & Visualizations -->
-    <section class="card" id="experiments">
-      <h2>🧪 Experiments & Visualizations</h2>
-
-      <h3>Experiment 1 – Baseline AlexNet</h3>
-      <p>
-        This was my baseline setup:
-      </p>
-      <ul>
-        <li>Batch size: 16</li>
-        <li>Learning rate: 0.001</li>
-        <li>Augmentation: OFF</li>
-      </ul>
-      <div class="grid">
-        <div class="viz">
-          <h3>Accuracy (Exp 1)</h3>
-          <img src="images/exp1_accuracy.png" alt="Experiment 1 accuracy plot" />
-        </div>
-        <div class="viz">
-          <h3>Loss (Exp 1)</h3>
-          <img src="images/exp1_loss.png" alt="Experiment 1 loss plot" />
-        </div>
-      </div>
-
-      <h3 style="margin-top:1.4rem;">Experiment 3 – Best Performance</h3>
-      <p>
-        Experiment 3 gave me some of my best results. I changed the learning rate and turned augmentation on:
-      </p>
-      <ul>
-        <li>Learning rate: 0.0001</li>
-        <li>Batch size: 16</li>
-        <li>Augmentation: ON</li>
-      </ul>
-
-      <div class="grid">
-        <div class="viz">
-          <h3>Accuracy (Exp 3)</h3>
-          <img src="images/exp3_accuracy.png" alt="Experiment 3 accuracy plot" />
-        </div>
-        <div class="viz">
-          <h3>Loss (Exp 3)</h3>
-          <img src="images/exp3_loss.png" alt="Experiment 3 loss plot" />
-        </div>
-      </div>
-
-      <h3 style="margin-top:1.4rem;">Confusion Matrix (Best Model)</h3>
-      <p>
-        This confusion matrix is from one of the stronger runs:
-      </p>
-      <img src="images/confusion_matrix.png" alt="Confusion matrix for wet vs dry predictions" />
-
-      <p class="note">
-        The model is very good at recognizing <strong>wet</strong> roads, but it sometimes predicts “wet” when the road
-        is actually dry. For a safety tool, that’s not the worst problem, because it’s better to be overly cautious than
-        to miss a truly wet road.
-      </p>
-    </section>
-
-    <!-- Takeaways -->
-    <section class="card" id="takeaways">
-      <h2>📌 Takeaways</h2>
-      <ul>
-        <li>AlexNet can learn the difference between wet and dry roads even with a small dataset.</li>
-        <li>Lowering the learning rate and using data augmentation gave smoother training and better validation accuracy.</li>
-        <li>Turning augmentation off made the model overfit faster (training accuracy high, validation worse).</li>
-        <li>ResNet18 is more powerful, but with this small dataset it can overfit and doesn’t always beat AlexNet by a lot.</li>
-        <li>The model leans toward predicting “wet,” which is actually safer for a real-world warning system.</li>
-      </ul>
-      <p style="margin-top:0.6rem;">
-        Overall, this project is an early step toward the bigger ZeroSkid idea: using AI to help drivers understand
-        road conditions before they become a problem.
+        The <a href="technical.html">Technical Approach page</a> explains how I used AlexNet and ResNet18, which
+        experiments I ran in Colab, and how the model actually performed. It also includes visualizations, plots from
+        Weights &amp; Biases, and my main takeaways from the results.
       </p>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>ZeroSkid – Wet vs Dry Road Detection • demo123 GitHub repo</p>
+    <p>ZeroSkid – Wet vs Dry Road Detection • demo123</p>
   </footer>
 </body>
 </html>
