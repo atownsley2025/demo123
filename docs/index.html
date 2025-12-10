@@ -2,89 +2,1376 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ZeroSkid – Wet vs Dry Road Detection</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>ZeroSkid – Wet Road Safety with AlexNet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #020617;
+      --card: #02091b;
+      --accent: #38bdf8;
+      --accent-2: #0ea5e9;
+      --accent-soft: rgba(56,189,248,0.16);
+      --accent-soft-2: rgba(59,130,246,0.16);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: rgba(30,64,175,0.65);
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --shadow-soft: 0 22px 50px rgba(15,23,42,0.8);
+      --transition-fast: 0.2s ease-out;
+      --transition-med: 0.28s ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(59,130,246,0.25), transparent 55%),
+        radial-gradient(circle at top right, rgba(56,189,248,0.25), transparent 55%),
+        linear-gradient(to bottom, #020617 0, #020617 100%);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      scroll-behavior: smooth;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 18px 16px 60px;
+    }
+
+    /* NAVBAR */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(
+        to bottom,
+        rgba(3,7,18,0.98),
+        rgba(3,7,18,0.85),
+        transparent
+      );
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(15,23,42,0.9);
+    }
+
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 10px 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 30% 20%, #e0f2fe 0, #38bdf8 30%, #1d4ed8 55%, #020617 100%);
+      box-shadow:
+        0 0 25px rgba(56,189,248,0.85),
+        0 0 45px rgba(37,99,235,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #0b1120;
+    }
+
+    .logo-subtitle {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: none;
+      font-weight: 400;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .nav-links a {
+      padding: 7px 11px;
+      border-radius: 999px;
+      color: var(--muted);
+      border: 1px solid transparent;
+      transition: var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-links a::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(59,130,246,0.22), transparent 55%);
+      opacity: 0;
+      transition: var(--transition-fast);
+      pointer-events: none;
+    }
+
+    .nav-links a:hover {
+      border-color: var(--accent-soft);
+      background: radial-gradient(circle at bottom, rgba(15,23,42,0.95), rgba(15,23,42,0.98));
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .nav-links a:hover::before {
+      opacity: 1;
+    }
+
+    .tag-pill {
+      font-size: 0.72rem;
+      padding: 4px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--muted);
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,0.1), transparent 55%),
+        rgba(15,23,42,0.95);
+    }
+
+    @media (max-width: 720px) {
+      .nav-inner {
+        flex-wrap: wrap;
+      }
+      .tag-pill {
+        display: none;
+      }
+    }
+
+    /* HERO */
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.3fr);
+      gap: 28px;
+      margin-top: 18px;
+      align-items: center;
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .hero-kicker {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .hero-kicker-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #22c55e, #16a34a);
+      box-shadow: 0 0 14px rgba(34,197,94,0.7);
+    }
+
+    .hero-title {
+      font-size: clamp(2.1rem, 3.2vw, 2.8rem);
+      font-weight: 780;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(to right, #e5e7eb, #38bdf8);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+      max-width: 32rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .hero-metric {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at top, rgba(30,64,175,0.45), transparent 60%),
+        rgba(15,23,42,0.94);
+      border: 1px solid rgba(30,64,175,0.9);
+      box-shadow: 0 14px 34px rgba(15,23,42,0.7);
+    }
+
+    .hero-metric strong {
+      display: block;
+      font-size: 0.86rem;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    .btn-primary,
+    .btn-ghost {
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-size: 0.86rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: none;
+      color: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background:
+        radial-gradient(circle at top left, #e0f2fe, #38bdf8 45%, #2563eb 100%);
+      color: #020617;
+      font-weight: 600;
+      box-shadow:
+        0 18px 40px rgba(37,99,235,0.4),
+        0 0 20px rgba(56,189,248,0.6);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.07);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      border-color: rgba(51,65,85,0.9);
+      color: var(--muted);
+      background: rgba(15,23,42,0.95);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--accent-soft);
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.16), transparent 60%),
+        rgba(15,23,42,0.98);
+      color: var(--text);
+    }
+
+    .hero-media {
+      position: relative;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.3), transparent 60%),
+        radial-gradient(circle at bottom, rgba(30,64,175,0.7), transparent 60%);
+      border: 1px solid rgba(37,99,235,0.85);
+      box-shadow: var(--shadow-soft);
+      min-height: 260px;
+    }
+
+    .hero-media-inner {
+      position: absolute;
+      inset: 0;
+      padding: 12px;
+      display: grid;
+      grid-template-rows: 1.7fr 1.2fr;
+      gap: 10px;
+    }
+
+    .hero-main-image {
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: #020617;
+    }
+
+    .hero-main-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .hero-strip {
+      display: grid;
+      grid-template-columns: 1.3fr 1.3fr;
+      gap: 8px;
+    }
+
+    .hero-strip-card {
+      border-radius: 14px;
+      border: 1px solid rgba(30,64,175,0.8);
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,0.24), transparent 60%),
+        rgba(15,23,42,0.98);
+      padding: 8px 9px;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .hero-strip-card strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+    }
+
+    /* SECTIONS */
+    section {
+      margin-top: 40px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .section-label::before {
+      content: "";
+      width: 30px;
+      height: 1px;
+      border-radius: 999px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        rgba(96,165,250,0.9),
+        rgba(56,189,248,0.9)
+      );
+    }
+
+    .section-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 650;
+    }
+
+    .section-subtitle {
+      font-size: 0.88rem;
+      color: var(--muted);
+      max-width: 32rem;
+    }
+
+    .card-grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.7fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .card-grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(circle at top left, rgba(30,64,175,0.35), transparent 60%),
+        rgba(15,23,42,0.98);
+      box-shadow: 0 16px 40px rgba(15,23,42,0.8);
+      padding: 14px 14px 12px;
+      font-size: 0.9rem;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+
+    .pill {
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: #bfdbfe;
+      background:
+        linear-gradient(to right, rgba(37,99,235,0.8), rgba(56,189,248,0.85));
+      border: 1px solid rgba(191,219,254,0.4);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.55);
+    }
+
+    ul {
+      padding-left: 1.1rem;
+      margin-top: 6px;
+    }
+
+    li {
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    /* TECH ACCORDIONS */
+    .accordion-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .accordion-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .accordion-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .accordion {
+      border-radius: 16px;
+      border: 1px solid rgba(30,64,175,0.8);
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.18), transparent 60%),
+        rgba(15,23,42,0.98);
+      padding: 10px 11px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition-med);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .accordion::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(59,130,246,0.35), transparent 60%);
+      opacity: 0;
+      transition: var(--transition-med);
+      pointer-events: none;
+    }
+
+    .accordion:hover {
+      border-color: #60a5fa;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 36px rgba(15,23,42,0.9);
+    }
+
+    .accordion:hover::before {
+      opacity: 1;
+    }
+
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .accordion-title {
+      font-weight: 550;
+      font-size: 0.86rem;
+    }
+
+    .accordion-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.76rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      background: rgba(15,23,42,0.98);
+    }
+
+    .accordion-body {
+      margin-top: 6px;
+      display: none;
+    }
+
+    .accordion.open .accordion-body {
+      display: block;
+    }
+
+    .accordion.open .accordion-icon {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(15,23,42,1);
+    }
+
+    .accordion-body p,
+    .accordion-body li {
+      font-size: 0.83rem;
+    }
+
+    /* GALLERY */
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      margin-top: 4px;
+    }
+
+    .filter-chip {
+      font-size: 0.75rem;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(30,64,175,0.8);
+      color: var(--muted);
+      background: rgba(15,23,42,0.98);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .filter-chip.active {
+      border-color: var(--accent);
+      color: #e0f2fe;
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.25), transparent 60%),
+        rgba(15,23,42,0.98);
+      box-shadow: 0 12px 26px rgba(37,99,235,0.7);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .gallery-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 460px) {
+      .gallery-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .thumb {
+      border-radius: 14px;
+      border: 1px solid rgba(30,64,175,0.8);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      background: #020617;
+      transition: var(--transition-med);
+      box-shadow: 0 12px 30px rgba(15,23,42,0.9);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      aspect-ratio: 4/3;
+      opacity: 0.96;
+      transition: var(--transition-med);
+    }
+
+    .thumb:hover img {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+
+    .thumb::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, transparent, rgba(15,23,42,0.65));
+      opacity: 0;
+      transition: var(--transition-med);
+    }
+
+    .thumb:hover::after {
+      opacity: 1;
+    }
+
+    .thumb-label {
+      position: absolute;
+      left: 6px;
+      bottom: 6px;
+      right: 6px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at bottom, rgba(15,23,42,0.98), rgba(15,23,42,0.96));
+      padding: 4px 7px;
+      font-size: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+      color: var(--muted);
+      border: 1px solid rgba(30,64,175,0.9);
+    }
+
+    .thumb-label span:first-child {
+      color: #e0f2fe;
+    }
+
+    .thumb-tag {
+      font-size: 0.66rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: rgba(15,23,42,0.98);
+    }
+
+    .thumb[data-category][data-active="false"] {
+      opacity: 0.14;
+      pointer-events: none;
+      transform: scale(0.98);
+    }
+
+    /* RESULTS / TAKEAWAYS */
+    .split-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .split-2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .metric-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 6px;
+    }
+
+    .metric-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(30,64,175,0.9);
+      padding: 6px 9px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.15), transparent 60%),
+        rgba(15,23,42,0.98);
+    }
+
+    .metric-list strong {
+      color: #e0f2fe;
+    }
+
+    .todo {
+      color: #fde68a;
+      font-size: 0.78rem;
+    }
+
+    /* LIGHTBOX */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(3,7,18,0.96);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      padding: 18px;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox-inner {
+      max-width: 960px;
+      width: 100%;
+      max-height: 100%;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,0.2), transparent 55%),
+        rgba(15,23,42,1);
+      border: 1px solid rgba(148,163,184,0.7);
+      box-shadow: 0 26px 70px rgba(0,0,0,0.9);
+      padding: 12px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .lightbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    .lightbox-title {
+      font-weight: 550;
+      color: #e0f2fe;
+    }
+
+    .lightbox-body {
+      border-radius: 14px;
+      overflow: hidden;
+      background: #020617;
+      border: 1px solid rgba(30,64,175,0.9);
+    }
+
+    .lightbox-body img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      max-height: calc(100vh - 130px);
+      background: #020617;
+    }
+
+    .lightbox-close {
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(30,64,175,0.9);
+      background: rgba(15,23,42,0.98);
+      color: var(--muted);
+    }
+
+    .lightbox-close:hover {
+      border-color: var(--accent);
+      color: #e0f2fe;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid rgba(15,23,42,0.9);
+      padding-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="logo">ZeroSkid</div>
-    <nav>
-      <a href="index.html" class="active">Problem</a>
-      <a href="technical.html">Technical Approach</a>
-    </nav>
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="logo">
+        <div class="logo-mark">ZS</div>
+        <div>
+          ZeroSkid
+          <div class="logo-subtitle">
+            Wet-Road Detection with AlexNet
+          </div>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="#problem">Problem</a>
+        <a href="#technical">AlexNet</a>
+        <a href="#visuals">Visualizations</a>
+        <a href="#results">Results</a>
+        <a href="#takeaways">Takeaways</a>
+      </div>
+      <span class="tag-pill">Class Project • GitHub Pages</span>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>ZeroSkid: Wet vs Dry Road Classifier</h1>
-      <p>
-        ZeroSkid is my deep learning project where I trained a model to tell if a road surface is 
-        <strong>wet</strong> or <strong>dry</strong> from images. The goal is to explore how computer vision 
-        could help warn drivers about unsafe road conditions before drivers actually lose control.
-      </p>
+  <main class="page">
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div>
+        <div class="hero-kicker">
+          <span class="hero-kicker-dot"></span>
+          <span>Student AI project · Wet-road safety</span>
+        </div>
+        <h1 class="hero-title">
+          <span>ZeroSkid</span>: catching wet pavement before the skid.
+        </h1>
+        <p class="hero-subtitle">
+          I trained an AlexNet-based model to tell wet pavement from dry just by looking at road images.
+          The idea is simple: if a car can see a dangerous wet surface early, it can warn the driver before
+          they lose control.
+        </p>
+        <div class="hero-grid">
+          <div class="hero-metric">
+            <strong>Problem &amp; motivation</strong>
+            Wet pavement quietly causes a huge number of weather-related crashes. Current safety systems wait
+            until after traction is gone.
+          </div>
+          <div class="hero-metric">
+            <strong>Model approach</strong>
+            Fine-tuned AlexNet on a two-class wet vs. dry dataset and ran multiple experiments to see what
+            really improved accuracy.
+          </div>
+          <div class="hero-metric">
+            <strong>Experiments</strong>
+            I compared a baseline model to tuned versions with different learning rates and tracked training
+            behavior across runs.
+          </div>
+          <div class="hero-metric">
+            <strong>Key insight</strong>
+            A lower learning rate gave more stable training and better validation accuracy, especially in my
+            best experiment (Experiment 3).
+          </div>
+        </div>
+        <div class="hero-cta-row">
+          <button class="btn-primary" data-scroll="#problem">
+            View problem &amp; motivation →
+          </button>
+          <button class="btn-ghost" data-scroll="#visuals">
+            Jump to my plots &amp; graphs
+          </button>
+        </div>
+      </div>
+
+      <aside class="hero-media">
+        <div class="hero-media-inner">
+          <div class="hero-main-image">
+            <!-- Using your best experiment accuracy as the hero visual -->
+            <img src="images/exp3_accuracy.png" alt="Accuracy plot for Experiment 3, the best-performing model" />
+          </div>
+          <div class="hero-strip">
+            <div class="hero-strip-card">
+              <strong>Experiment 3 – best run</strong>
+              <p>
+                Experiment 3 used a lower learning rate and gave the smoothest accuracy curve and best validation
+                performance out of all my runs.
+              </p>
+            </div>
+            <div class="hero-strip-card">
+              <strong>Baseline vs. tuned</strong>
+              <p>
+                Comparing Experiment 1 and Experiment 3 helped me see how much hyperparameters matter, even when
+                the model architecture stays the same.
+              </p>
+            </div>
+          </div>
+        </div>
+      </aside>
     </section>
 
-    <section class="card" id="problem">
-      <h2>🚗 Problem</h2>
-      <p>
-        Hydroplaning happens fast, especially when the road looks “normal” but is actually slick. A lot of the time,
-        drivers only realize how bad the road is once they are already sliding. Most driver-assist systems focus on
-        other cars, lanes, or speed – not on the texture or condition of the road surface itself.
-      </p>
-      <p>
-        The smaller question I wanted to test was simple: <strong>can a model look at an image of the road and decide if it’s wet or dry?</strong>
-        If that works, it could eventually be built into a safety system that reacts earlier than a human would.
-      </p>
+    <!-- PROBLEM & MOTIVATION -->
+    <section id="problem">
+      <div class="section-label">Problem &amp; Motivation</div>
+      <div class="section-title-row">
+        <h2 class="section-title">Why wet roads need better warnings.</h2>
+        <p class="section-subtitle">
+          Hydroplaning can happen in a split second. By the time ABS and traction control react, the car might
+          already be sliding. This project explores how computer vision could give a heads-up before that moment.
+        </p>
+      </div>
+      <div class="card-grid-2">
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">The safety gap</h3>
+          <p>
+            Most modern vehicles are designed to react after the driver has already started to lose traction.
+            On wet pavement, especially at higher speeds, that reaction can come too late. There is a gap
+            between “the road is getting risky” and “the car is already out of control.”
+          </p>
+          <ul>
+            <li>Wet pavement is responsible for many weather-related crashes and injuries each year.</li>
+            <li>Drivers don’t always realize how much grip they’ve lost until it’s too late.</li>
+            <li>Existing systems rarely tell you that the <em>surface itself</em> is the problem.</li>
+          </ul>
+          <p style="margin-top:6px;">
+            ZeroSkid asks a simple question: what if the car’s camera could recognize wet pavement early and
+            warn the driver before they reach that dangerous point?
+          </p>
+        </article>
+
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">Goals for this project</h3>
+          <p>
+            This is a prototype, not a production system. The goal was to build, train, and analyze a model that:
+          </p>
+          <ul>
+            <li>Classifies images of pavement as either <strong>wet</strong> or <strong>dry</strong>.</li>
+            <li>Uses AlexNet as a starting point and explores how far tuning can go.</li>
+            <li>Connects the model’s behavior back to real-world driving and safety questions.</li>
+          </ul>
+          <div class="pill-row">
+            <span class="pill">Computer vision</span>
+            <span class="pill">Road safety</span>
+            <span class="pill">AlexNet</span>
+            <span class="pill">Experimental design</span>
+          </div>
+        </article>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>💡 Motivation</h2>
-      <p>
-        I’ve always been interested in the idea of using AI for safety instead of just for convenience. Wet roads are
-        a really common problem, but drivers don’t always adjust their behavior until it’s too late. If a car’s camera
-        could recognize a dangerous surface, it could:
-      </p>
-      <ul>
-        <li>Warn the driver when the road looks risky</li>
-        <li>Adjust things like cruise control or braking on wet roads</li>
-        <li>Help make smarter, condition-aware driving systems</li>
-      </ul>
-      <p>
-        ZeroSkid is not a full product, but this project is one realistic step: building and testing a classifier that
-        understands the difference between wet and dry road images.
-      </p>
+    <!-- TECHNICAL APPROACH (ALEXNET) -->
+    <section id="technical">
+      <div class="section-label">Technical Approach</div>
+      <div class="section-title-row">
+        <h2 class="section-title">How I used AlexNet to see wet pavement.</h2>
+        <p class="section-subtitle">
+          Under the hood, ZeroSkid uses a convolutional neural network (AlexNet) that was originally trained on
+          ImageNet. I fine-tuned it on a wet/dry road dataset and ran several experiments to understand how
+          training choices affected performance.
+        </p>
+      </div>
+
+      <div class="card-grid-2" style="margin-bottom:14px;">
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">Dataset &amp; setup</h3>
+          <p>
+            I built a two-class dataset focused on clear views of road surfaces labeled as wet or dry. All images
+            were resized and normalized to match AlexNet’s expected input format and split into training,
+            validation, and test sets.
+          </p>
+          <ul>
+            <li>Two labels: <strong>wet</strong> pavement and <strong>dry</strong> pavement.</li>
+            <li>Images preprocessed to AlexNet’s input size and normalized.</li>
+            <li>Training, validation, and test splits used to keep evaluation fair.</li>
+          </ul>
+          <p style="margin-top:6px;">
+            Everything was implemented in PyTorch and run in Google Colab, which made it easy to track experiments
+            and export plots like the ones shown on this site.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">Model &amp; training summary</h3>
+          <p>
+            I started from a pre-trained AlexNet and adapted its final layers for my two classes. I trained the
+            classifier with cross-entropy loss and experimented with different hyperparameters to see what helped
+            the model learn the most.
+          </p>
+          <ul>
+            <li>Base model: pre-trained AlexNet (convolutional + pooling layers).</li>
+            <li>Final layer swapped for a 2-class output (wet vs. dry).</li>
+            <li>Trained with cross-entropy loss and an optimizer like SGD/Adam.</li>
+          </ul>
+          <p style="margin-top:6px;">
+            From there, I ran multiple experiments that changed the learning rate and tracked accuracy and loss
+            over time.
+          </p>
+        </article>
+      </div>
+
+      <div class="accordion-grid">
+        <div class="accordion open">
+          <div class="accordion-header">
+            <div class="accordion-title">Experiment 1 – Baseline training</div>
+            <div class="accordion-icon">+</div>
+          </div>
+          <div class="accordion-body">
+            <p>
+              Experiment 1 used a more “default” setup. It acted as the baseline to compare later changes.
+            </p>
+            <ul>
+              <li>Standard learning rate and batch size.</li>
+              <li>No extra tricks or heavy tuning.</li>
+              <li>Accuracy and loss curves from this run show how the model behaved out of the box.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <div class="accordion-header">
+            <div class="accordion-title">Experiment 2 – Hyperparameter exploration</div>
+            <div class="accordion-icon">+</div>
+          </div>
+          <div class="accordion-body">
+            <p>
+              In between the baseline and the best run, I explored learning rate and batch size options to see
+              how they changed the shape of the curves and the final accuracy.
+            </p>
+            <ul>
+              <li>Compared smaller vs. larger learning rates.</li>
+              <li>Balanced batch size for stability vs. speed.</li>
+              <li>Helped narrow down what worked before locking in Experiment 3.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <div class="accordion-header">
+            <div class="accordion-title">Experiment 3 – Best-performing model</div>
+            <div class="accordion-icon">+</div>
+          </div>
+          <div class="accordion-body">
+            <p>
+              Experiment 3 used a lower learning rate that made training more stable. The accuracy plot from this
+              run is smoother and reaches the best validation performance of all the experiments.
+            </p>
+            <p class="todo">
+              ← Update this text with your actual best accuracy from Colab (for example: “Experiment 3 reached
+              about XX% validation accuracy.”).
+            </p>
+            <ul>
+              <li>Lower learning rate produced more gradual, steady learning.</li>
+              <li>Reduced overfitting compared to the baseline setup.</li>
+              <li>This run is treated as the “best model” in my results section.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>📂 Dataset Overview</h2>
-      <p>
-        For this project, I created a small custom dataset with two labels: <strong>wet</strong> and <strong>dry</strong>. 
-        The images came from online sources and were organized into folders:
-      </p>
-      <ul>
-        <li><code>train/wet</code> and <code>train/dry</code></li>
-        <li><code>valid/wet</code> and <code>valid/dry</code></li>
-      </ul>
-      <p>
-        Every image was resized to <strong>224×224</strong> and normalized so it works with AlexNet. Because the
-        dataset is small, part of the project is just seeing how much performance we can squeeze out of limited data
-        using techniques like transfer learning and data augmentation.
-      </p>
+    <!-- VISUALIZATIONS -->
+    <section id="visuals">
+      <div class="section-label">Visualizations</div>
+      <div class="section-title-row">
+        <h2 class="section-title">Plots &amp; graphs from my Colab notebook.</h2>
+        <p class="section-subtitle">
+          These screenshots come straight from my training runs. You can see how the baseline model behaved,
+          how the best experiment improved, and how well the final model separated wet vs. dry images.
+        </p>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="baseline">Experiment 1 (baseline)</button>
+        <button class="filter-chip" data-filter="best">Experiment 3 (best)</button>
+        <button class="filter-chip" data-filter="evaluation">Evaluation</button>
+      </div>
+
+      <div class="gallery-grid">
+        <!-- Your 5 images wired into the gallery -->
+
+        <!-- Experiment 3 accuracy (best) -->
+        <div class="thumb" data-category="best" data-active="true" data-title="Experiment 3 – Accuracy">
+          <img src="images/exp3_accuracy.png" alt="Accuracy over epochs for Experiment 3" />
+          <div class="thumb-label">
+            <span>Exp 3 accuracy</span>
+            <span class="thumb-tag">Best model</span>
+          </div>
+        </div>
+
+        <!-- Experiment 3 loss (best) -->
+        <div class="thumb" data-category="best" data-active="true" data-title="Experiment 3 – Loss">
+          <img src="images/exp3_loss.png" alt="Loss over epochs for Experiment 3" />
+          <div class="thumb-label">
+            <span>Exp 3 loss</span>
+            <span class="thumb-tag">Best model</span>
+          </div>
+        </div>
+
+        <!-- Experiment 1 accuracy (baseline) -->
+        <div class="thumb" data-category="baseline" data-active="true" data-title="Experiment 1 – Accuracy">
+          <img src="images/exp1_accuracy.png" alt="Accuracy over epochs for Experiment 1 baseline model" />
+          <div class="thumb-label">
+            <span>Exp 1 accuracy</span>
+            <span class="thumb-tag">Baseline</span>
+          </div>
+        </div>
+
+        <!-- Experiment 1 loss (baseline) -->
+        <div class="thumb" data-category="baseline" data-active="true" data-title="Experiment 1 – Loss">
+          <img src="images/exp1_loss.png" alt="Loss over epochs for Experiment 1 baseline model" />
+          <div class="thumb-label">
+            <span>Exp 1 loss</span>
+            <span class="thumb-tag">Baseline</span>
+          </div>
+        </div>
+
+        <!-- Confusion matrix (evaluation) -->
+        <div class="thumb" data-category="evaluation" data-active="true" data-title="Confusion Matrix – Best Model">
+          <img src="images/confusion_matrix.png" alt="Confusion matrix for best-performing ZeroSkid model" />
+          <div class="thumb-label">
+            <span>Confusion matrix</span>
+            <span class="thumb-tag">Evaluation</span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="card">
-      <h2>📄 What’s on the Next Page?</h2>
-      <p>
-        The <a href="technical.html">Technical Approach page</a> explains how I used AlexNet and ResNet18, which
-        experiments I ran in Colab, and how the model actually performed. It also includes visualizations, plots from
-        Weights &amp; Biases, and my main takeaways from the results.
-      </p>
+    <!-- RESULTS -->
+    <section id="results">
+      <div class="section-label">Results</div>
+      <div class="section-title-row">
+        <h2 class="section-title">What I learned from the experiments.</h2>
+        <p class="section-subtitle">
+          Instead of training one model and stopping, I treated this as a small research project. Comparing the
+          baseline (Experiment 1) to the tuned run (Experiment 3) helped me understand how training choices show
+          up in the plots and final accuracy.
+        </p>
+      </div>
+
+      <div class="split-2">
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">High-level findings</h3>
+          <p>
+            The training curves reveal that the “default” setup in Experiment 1 learned something, but it wasn’t
+            the most stable. Experiment 3, with a lower learning rate, showed smoother accuracy growth and a
+            clearer gap between training and validation performance.
+          </p>
+          <ul>
+            <li>
+              Experiment 1 gave me a baseline and showed how quickly the model could overfit without careful tuning.
+            </li>
+            <li>
+              Experiment 3 improved validation accuracy and produced cleaner curves across epochs.
+            </li>
+            <li>
+              The confusion matrix for the best model suggests it can correctly identify many wet and dry cases,
+              but still has room to improve.
+            </li>
+          </ul>
+          <p class="todo" style="margin-top:6px;">
+            ← Replace this paragraph with your actual numbers (for example: “Experiment 1 reached around XX%,
+            Experiment 3 reached around YY% on the validation set.”).
+          </p>
+        </article>
+
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">Metrics snapshot</h3>
+          <p>
+            These placeholders show the types of metrics I tracked. You can fill these in based on your final
+            Colab results.
+          </p>
+          <ul class="metric-list">
+            <li>
+              <span>Experiment 1 (baseline) validation accuracy</span>
+              <strong>[add %]</strong>
+            </li>
+            <li>
+              <span>Experiment 3 (best) validation accuracy</span>
+              <strong>[add %]</strong>
+            </li>
+            <li>
+              <span>Wet class recall (best model)</span>
+              <strong>[add %]</strong>
+            </li>
+            <li>
+              <span>Dry class recall (best model)</span>
+              <strong>[add %]</strong>
+            </li>
+            <li>
+              <span>Total number of test images</span>
+              <strong>[add count]</strong>
+            </li>
+          </ul>
+          <p style="margin-top:4px;font-size:0.8rem;color:var(--muted);">
+            Together, these numbers help answer whether the model is more confident on wet roads, dry roads,
+            or handles both fairly evenly.
+          </p>
+        </article>
+      </div>
     </section>
+
+    <!-- TAKEAWAYS -->
+    <section id="takeaways">
+      <div class="section-label">Takeaways &amp; Future Work</div>
+      <div class="section-title-row">
+        <h2 class="section-title">What this project taught me.</h2>
+        <p class="section-subtitle">
+          ZeroSkid is just one class project, but it shows how computer vision and careful experiments can
+          connect to real-world safety questions about driving on wet roads.
+        </p>
+      </div>
+
+      <div class="card-grid-2">
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">Key takeaways</h3>
+          <ul>
+            <li>
+              <strong>Small changes can matter a lot.</strong> Adjusting something as simple as the learning rate
+              made a clear difference in my accuracy and loss curves.
+            </li>
+            <li>
+              <strong>Plots tell the story.</strong> Looking at how accuracy and loss changed over time helped me
+              understand what the model was doing, not just what the final number was.
+            </li>
+            <li>
+              <strong>Evaluation isn’t just one score.</strong> The confusion matrix showed where the model did
+              well and where it still struggled.
+            </li>
+            <li>
+              <strong>Safety context stays important.</strong> Even a “good” model has to be tested in real
+              conditions before it could be trusted in a car.
+            </li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3 style="font-size:0.98rem;font-weight:600;margin-bottom:6px;">Future directions</h3>
+          <ul>
+            <li>Collect more varied data from different roads, times of day, and weather conditions.</li>
+            <li>Test other architectures and lighter models that could run on in-car hardware.</li>
+            <li>Move from single images to short video clips so the system can see how the road changes over time.</li>
+            <li>
+              Design how a real car interface might warn drivers about dangerous wet pavement without distracting them.
+            </li>
+          </ul>
+          <p style="margin-top:6px;">
+            Overall, this project was a hands-on way to connect deep learning, experiment design, and road safety
+            into one topic: keeping drivers from reaching the moment where they lose traction in the first place.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <span>© <span id="year"></span> ZeroSkid • Wet-Road Safety Project</span>
+      <span>Built with HTML, CSS, and JS · Hosted on GitHub Pages</span>
+    </footer>
   </main>
 
-  <footer class="site-footer">
-    <p>ZeroSkid – Wet vs Dry Road Detection • demo123</p>
-  </footer>
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-inner">
+      <div class="lightbox-header">
+        <div class="lightbox-title" id="lightbox-title">Image</div>
+        <button class="lightbox-close" id="lightbox-close">Close ✕</button>
+      </div>
+      <div class="lightbox-body">
+        <img id="lightbox-img" src="" alt="" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Smooth scroll for nav & buttons
+    document.querySelectorAll('[data-scroll], nav a[href^="#"]').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = this.getAttribute('data-scroll') || this.getAttribute('href');
+        const section = document.querySelector(target);
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Accordions
+    document.querySelectorAll('.accordion').forEach(function(acc) {
+      acc.addEventListener('click', function() {
+        this.classList.toggle('open');
+      });
+    });
+
+    // Gallery filter
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const thumbs = document.querySelectorAll('.thumb');
+
+    filterChips.forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        const filter = this.getAttribute('data-filter');
+        filterChips.forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+
+        thumbs.forEach(function(thumb) {
+          if (filter === 'all') {
+            thumb.setAttribute('data-active', 'true');
+          } else {
+            const categories = (thumb.getAttribute('data-category') || '').split(' ');
+            thumb.setAttribute('data-active', categories.includes(filter) ? 'true' : 'false');
+          }
+        });
+      });
+    });
+
+    // Lightbox for images
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxTitle = document.getElementById('lightbox-title');
+    const lightboxClose = document.getElementById('lightbox-close');
+
+    thumbs.forEach(function(thumb) {
+      thumb.addEventListener('click', function() {
+        const imgEl = this.querySelector('img');
+        const title = this.getAttribute('data-title') || imgEl.alt || 'Image';
+        lightboxImg.src = imgEl.src;
+        lightboxImg.alt = imgEl.alt;
+        lightboxTitle.textContent = title;
+        lightbox.classList.add('open');
+      });
+    });
+
+    lightboxClose.addEventListener('click', function() {
+      lightbox.classList.remove('open');
+    });
+
+    lightbox.addEventListener('click', function(e) {
+      if (e.target === lightbox) {
+        lightbox.classList.remove('open');
+      }
+    });
+
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
 
